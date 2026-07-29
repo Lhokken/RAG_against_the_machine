@@ -11,7 +11,7 @@ if __name__ == "__main__":
 	if os.path.exists("Index_bm25s"):
 		print("Index already exist! Ultrafast loading.")
 		retriever = bm25s.BM25.load("Index_bm25s", load_corpus=True)
-		print(retriever.corpus)
+		# print(retriever.corpus)
 	else:
 		print("Index do not exist! Calculating ...")
 		explorer = Searcher()
@@ -19,7 +19,15 @@ if __name__ == "__main__":
 		explorer.search_all()
 		# explorer.print_file_list()
 		splitter.split_all(explorer.file_list)
-		splitter.print_chunk_list()
+		# splitter.print_chunk_list()
 		bm25_indexer = Bm25sApplier()
-		bm25_indexer.tokenizer(splitter.chunk_list_txt)
-		print("Index created and saved for next run!")
+		corpus_saved = [
+			{
+				"Text": doc.page_content,
+				"metadati": doc.metadata
+				} for doc in splitter.chunk_list]
+		# print(corpus_saved[0])
+		bm25_indexer.tokenizer([doc.page_content for doc in splitter.chunk_list])
+		# bm25_indexer.tokenizer(corpus_saved)
+
+

@@ -12,7 +12,7 @@ class Searcher(BaseModel):
 
 	def search_all(self) -> None:
 		try:
-			for root, dir, files in os.walk(self.root_directory):
+			for root, _, files in os.walk(self.root_directory):
 				for file in files:
 					if file.lower().endswith(self.valid_extensions):
 						file_path = os.path.join(root, file);
