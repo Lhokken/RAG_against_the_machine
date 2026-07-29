@@ -20,14 +20,8 @@ if __name__ == "__main__":
 		# explorer.print_file_list()
 		splitter.split_all(explorer.file_list)
 		# splitter.print_chunk_list()
+
 		bm25_indexer = Bm25sApplier()
-		corpus_saved = [
-			{
-				"Text": doc.page_content,
-				"metadati": doc.metadata
-				} for doc in splitter.chunk_list]
-		# print(corpus_saved[0])
-		bm25_indexer.tokenizer([doc.page_content for doc in splitter.chunk_list])
-		# bm25_indexer.tokenizer(corpus_saved)
+		bm25_indexer.tokenizer(splitter.chunk_list)
 
 

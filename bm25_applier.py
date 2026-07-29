@@ -3,16 +3,22 @@
 from typing import Any
 from pydantic import BaseModel, ValidationError
 import bm25s
+from langchain_core.documents import Document
 
 
 class Bm25sApplier(BaseModel):
 
-	def tokenizer(self, chunk_list: list[str]) -> None:
+	def tokenizer(self, chunk_list: list[Document]) -> None:
 		try:
-			chk_list_tokenized = bm25s.tokenize(chunk_list)
+			corpus_saved = [
+			{
+				"Text": doc.page_content,
+				"metadati": doc.metadata
+				} for doc in chunk_list]
+			corpus_tokens = bm25s.tokenize([doc.page_content for doc in chunk_list])
 			retriever = bm25s.BM25()
-			retriever.index(chk_list_tokenized)
-			retriever.save("Index_bm25s", corpus=chunk_list)
+			retriever.index(corpus_tokens)
+			retriever.save("Index_bm25s", corpus=corpus_saved)
 			print("Index created and saved for next run!")
 		except ValidationError as e:
 			print(e)

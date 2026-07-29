@@ -1,6 +1,6 @@
 # Makefile
 
-.PHONY: all install run test lint clean
+.PHONY: all install run test lint clean fclean
 
 UV      = uv
 PYTHON  = .venv/bin/python
@@ -29,7 +29,11 @@ debug:
 # 	return		r		Run until current function returns
 	
 clean:
+	rm -rf Index_bm25s
+
+fclean:
 	rm -rf .venv
+	rm -rf Index_bm25s
 
 re: clean install
 
