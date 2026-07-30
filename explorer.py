@@ -12,7 +12,7 @@ from pprint import pprint
 
 
 class Searcher(BaseModel):
-    root_directory: str = "vllm-0.10.1"
+    root_directory: str = "Data/data_row/vllm-0.10.1"
     file_list: list[str] = []
     chunk_list: list[(Document)] = []
     valid_extensions: tuple[str, str, str] = (".py", ".txt", ".md")
@@ -55,16 +55,17 @@ class Searcher(BaseModel):
         for file in file_list:
             try:
                 temp = []
+                search_start = 0
                 with open(file, encoding="utf-8") as source:
+                    text_content = source.read()
                     if file.lower().endswith(".txt"):
                         text = Document(
-                            page_content=source.read(),
+                            page_content=text_content,
                             metadata={"source": file}
                             )
                         temp = txt_chunker.split_documents([text])
 
                     elif file.lower().endswith(".md"):
-                        text_content = source.read()
                         if re.search(
                                 html_pattern, text_content, re.IGNORECASE
                                 ):
@@ -81,7 +82,21 @@ class Searcher(BaseModel):
                             metadatas=[{"source": file}]
                             )
                         temp = txt_chunker.split_documents(temp)
+
                     if temp != []:
+                        for doc in temp:
+                            first_index = text_content.find(doc.page_content, search_start)
+                            if first_index != -1:
+                                last_index = first_index + len(doc.page_content)
+                                search_start = first_index + 1
+                            else:
+                                first_index = doc.metadata.get("start_index", 0)
+                                last_index = first_index + len(doc.page_content)
+                            doc.metadata["first_char_index"] = first_index
+                            doc.metadata["last_char_index"] = last_index
+                            if "start_index" in doc.metadata:
+                                del doc.metadata["start_index"]
+
                         self.chunk_list.extend(temp)
 
             except (
@@ -98,4 +113,3 @@ class Searcher(BaseModel):
             print("-" * 50)
             pprint(string)
             print("-" * 50)
-
