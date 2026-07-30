@@ -85,13 +85,21 @@ class Searcher(BaseModel):
 
                     if temp != []:
                         for doc in temp:
-                            first_index = text_content.find(doc.page_content, search_start)
+                            first_index = text_content.find(
+                                doc.page_content, search_start
+                                )
                             if first_index != -1:
-                                last_index = first_index + len(doc.page_content)
+                                last_index = first_index + len(
+                                    doc.page_content
+                                    )
                                 search_start = first_index + 1
                             else:
-                                first_index = doc.metadata.get("start_index", 0)
-                                last_index = first_index + len(doc.page_content)
+                                first_index = doc.metadata.get(
+                                    "start_index", 0
+                                    )
+                                last_index = first_index + len(
+                                    doc.page_content
+                                    )
                             doc.metadata["first_char_index"] = first_index
                             doc.metadata["last_char_index"] = last_index
                             if "start_index" in doc.metadata:
@@ -105,7 +113,7 @@ class Searcher(BaseModel):
                 PermissionError,
                 UnicodeDecodeError,
                 Exception
-                ) as e:
+            ) as e:
                 print(f"Error in elaborating file {file}: {e}")
 
     def print_chunk_list(self) -> None:

@@ -9,7 +9,9 @@ from bm25_applier import Bm25sApplier
 if __name__ == "__main__":
     if os.path.exists("Data/data_processed/Index_bm25s"):
         print("Index already exist! Ultrafast loading.")
-        retriever = bm25s.BM25.load("Data/data_processed/Index_bm25s", load_corpus=True)
+        retriever = bm25s.BM25.load(
+            "Data/data_processed/Index_bm25s", load_corpus=True
+            )
         # print(retriever.corpus)
     else:
         print("Index do not exist! Calculating ...")
