@@ -3,7 +3,6 @@
 import os
 import bm25s
 from explorer import Searcher
-from splitter import Splitter
 from bm25_applier import Bm25sApplier
 
 
@@ -15,11 +14,10 @@ if __name__ == "__main__":
     else:
         print("Index do not exist! Calculating ...")
         explorer = Searcher()
-        splitter = Splitter()
         explorer.search_all()
         # explorer.print_file_list()
-        splitter.split_all(explorer.file_list)
-        # splitter.print_chunk_list()
+        explorer.split_all(explorer.file_list)
+        # explorer.print_chunk_list()
 
         bm25_indexer = Bm25sApplier()
-        bm25_indexer.tokenizer(splitter.chunk_list)
+        bm25_indexer.tokenizer(explorer.chunk_list)
