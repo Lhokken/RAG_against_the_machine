@@ -51,33 +51,47 @@ class Searcher(BaseModel):
             ]
         )
         py_chunker = PythonCodeTextSplitter()
-        try:
-            temp: list[Document]
-            temp = []
-            for file in file_list:
+        temp: list[Document]
+        for file in file_list:
+            try:
+                temp = []
+                with open(file, encoding="utf-8") as source:
+                    if file.lower().endswith(".txt"):
+                        text = Document(
+                            page_content=source.read(),
+                            metadata={"source": file}
+                            )
+                        temp = txt_chunker.split_documents([text])
 
-                if file.lower().endswith(".txt"):
-                    with open(file) as source:
-                        temp = txt_chunker.create_documents([source.read()])
-
-                elif file.lower().endswith(".md"):
-                    with open(file) as source:
+                    elif file.lower().endswith(".md"):
+                        text_content = source.read()
                         if re.search(
-                                html_pattern, source.read(), re.IGNORECASE
+                                html_pattern, text_content, re.IGNORECASE
                                 ):
-                            temp = html_chunker.split_text(source.read())
+                            temp = html_chunker.split_text(text_content)
                         else:
-                            temp = md_chunker.split_text(source.read())
+                            temp = md_chunker.split_text(text_content)
+                        for doc in temp:
+                            doc.metadata["source"] = file
                         temp = txt_chunker.split_documents(temp)
 
-                elif file.lower().endswith(".py"):
-                    with open(file) as source:
-                        temp = py_chunker.create_documents([source.read()])
+                    elif file.lower().endswith(".py"):
+                        temp = py_chunker.create_documents(
+                            texts=[source.read()],
+                            metadatas=[{"source": file}]
+                            )
                         temp = txt_chunker.split_documents(temp)
+                    if temp != []:
+                        self.chunk_list.extend(temp)
 
-                self.chunk_list.extend(temp)
-        except ValidationError as e:
-            print(e)
+            except (
+                ValidationError,
+                FileNotFoundError,
+                PermissionError,
+                UnicodeDecodeError,
+                Exception
+                ) as e:
+                print(f"Error in elaborating file {file}: {e}")
 
     def print_chunk_list(self) -> None:
         for string in self.chunk_list:
