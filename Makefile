@@ -12,10 +12,10 @@ install:
 	$(UV) sync
 
 run:
-	$(UV) run python main.py
+	$(UV) run python src
 
 debug:
-	$(UV) run python -m pdb main.py config.txt
+	$(UV) run python -m pdb src
 
 # Run pdb in a shell
 # 	Command		Short	What it does
@@ -29,11 +29,11 @@ debug:
 # 	return		r		Run until current function returns
 	
 clean:
-	rm -rf Data/data_processed/Index_bm25s
+	rm -rf Data/processed/Index_bm25s
 
 fclean:
 	rm -rf .venv
-	rm -rf Data/data_processed/Index_bm25s
+	rm -rf Data/processed/Index_bm25s
 
 re: clean install
 

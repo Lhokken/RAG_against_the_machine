@@ -7,10 +7,10 @@ from bm25_applier import Bm25sApplier
 
 
 if __name__ == "__main__":
-    if os.path.exists("Data/data_processed/Index_bm25s"):
+    if os.path.exists("./Data/processed/Index_bm25s"):
         print("Index already exist! Ultrafast loading.")
         retriever = bm25s.BM25.load(
-            "Data/data_processed/Index_bm25s", load_corpus=True
+            "./Data/processed/Index_bm25s", load_corpus=True
             )
         # print(retriever.corpus)
     else:
@@ -24,9 +24,10 @@ if __name__ == "__main__":
         bm25_indexer = Bm25sApplier()
         bm25_indexer.tokenizer(explorer.chunk_list)
         retriever = bm25s.BM25.load(
-            "Data/data_processed/Index_bm25s", load_corpus=True
+            "./Data/processed/Index_bm25s", load_corpus=True
             )
-    question = "How to Silence a vLLM logger"
+    question: str = ""
+    question = input("Enter your question: ")
     query_tokens = bm25s.tokenize([question])
     if retriever.corpus is None:
         raise ValueError("Corpus not loaded or created. Verify.")

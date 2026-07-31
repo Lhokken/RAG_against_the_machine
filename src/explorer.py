@@ -12,7 +12,7 @@ from pprint import pprint
 
 
 class Searcher(BaseModel):
-    root_directory: str = "Data/data_row/vllm-0.10.1"
+    root_directory: str = "./Data/raw/vllm-0.10.1"
     file_list: list[str] = []
     chunk_list: list[(Document)] = []
     valid_extensions: tuple[str, str, str] = (".py", ".txt", ".md")

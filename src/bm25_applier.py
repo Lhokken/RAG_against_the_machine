@@ -19,7 +19,7 @@ class Bm25sApplier(BaseModel):
             retriever = bm25s.BM25(k1=1.5, b=0.75)
             retriever.index(corpus_tokens)
             retriever.save(
-                "Data/data_processed/Index_bm25s", corpus=corpus_saved
+                "./Data/processed/Index_bm25s", corpus=corpus_saved
                 )
             print("Index created and saved for next run!")
         except (ValidationError, Exception) as e:
