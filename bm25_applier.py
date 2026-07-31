@@ -14,14 +14,13 @@ class Bm25sApplier(BaseModel):
                     "Text": doc.page_content,
                     "metadati": doc.metadata
                 } for doc in chunk_list]
-            corpus_tokens = bm25s.tokenize(
-                [doc.page_content for doc in chunk_list]
-                )
-            retriever = bm25s.BM25()
+            text = [doc.page_content for doc in chunk_list]
+            corpus_tokens = bm25s.tokenize(text)
+            retriever = bm25s.BM25(k1=1.5, b=0.75)
             retriever.index(corpus_tokens)
             retriever.save(
                 "Data/data_processed/Index_bm25s", corpus=corpus_saved
                 )
             print("Index created and saved for next run!")
-        except ValidationError as e:
-            print(e)
+        except (ValidationError, Exception) as e:
+            print(f"Error while index cration: {e}")

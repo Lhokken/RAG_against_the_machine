@@ -23,3 +23,22 @@ if __name__ == "__main__":
 
         bm25_indexer = Bm25sApplier()
         bm25_indexer.tokenizer(explorer.chunk_list)
+        retriever = bm25s.BM25.load(
+            "Data/data_processed/Index_bm25s", load_corpus=True
+            )
+    question = "How to Silence a vLLM logger"
+    query_tokens = bm25s.tokenize([question])
+    if retriever.corpus is None:
+        raise ValueError("Corpus not loaded or created. Verify.")
+    result, scores = retriever.retrieve(query_tokens, corpus=retriever.corpus, k=4)
+    docs_found = result[0]
+    scores_found = scores[0]
+    print(f"Results for {question}:\n")
+    for position, (doc, score) in enumerate(zip(docs_found, scores_found), 1):
+        text = doc["Text"]
+        metadata = doc["metadati"]
+        print(f"results {position} score BM25: {score:.2f}\n")
+
+
+        print(f"Text: {text[:100]}\n")
+        
