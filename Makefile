@@ -38,10 +38,10 @@ fclean:
 re: clean install
 
 lint:
-	-$(UV) run flake8 *.py
-	$(UV) run mypy *.py
+	-$(UV) run flake8 src/*.py
+	$(UV) run mypy src/*.py
 
 lint-strict:
-	-$(UV) run flake8 *.py
-	$(UV) run mypy --strict *.py
+	-$(UV) run flake8 src/*.py
+	$(UV) run mypy --strict src/*.py
 
