@@ -2,15 +2,17 @@
 
 import os
 import bm25s
+import fire
+# from commands import CommandList
 from explorer import Searcher
 from bm25_applier import Bm25sApplier
 
 
 if __name__ == "__main__":
-    if os.path.exists("./Data/processed/Index_bm25s"):
+    if os.path.exists("./data/processed/Index_bm25s"):
         print("Index already exist! Ultrafast loading.")
         retriever = bm25s.BM25.load(
-            "./Data/processed/Index_bm25s", load_corpus=True
+            "./data/processed/Index_bm25s", load_corpus=True
             )
         # print(retriever.corpus)
     else:
@@ -24,8 +26,10 @@ if __name__ == "__main__":
         bm25_indexer = Bm25sApplier()
         bm25_indexer.tokenizer(explorer.chunk_list)
         retriever = bm25s.BM25.load(
-            "./Data/processed/Index_bm25s", load_corpus=True
+            "./data/processed/Index_bm25s", load_corpus=True
             )
+    # Commander = CommandList()
+
     question: str = ""
     question = input("Enter your question: ")
     query_tokens = bm25s.tokenize([question])

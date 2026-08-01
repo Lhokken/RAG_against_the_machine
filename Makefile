@@ -29,11 +29,11 @@ debug:
 # 	return		r		Run until current function returns
 	
 clean:
-	rm -rf Data/processed/Index_bm25s
+	rm -rf data/processed/Index_bm25s
 
 fclean:
 	rm -rf .venv
-	rm -rf Data/processed/Index_bm25s
+	rm -rf data/processed/Index_bm25s
 
 re: clean install
 
