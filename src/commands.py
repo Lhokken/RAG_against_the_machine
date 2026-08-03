@@ -17,12 +17,15 @@ class CLI():
 		"""serach method"""
 		# • search <query> –k <int>
 		# Return the top-k sources for a single query.
-		...
 
-	# @staticmethod
-	# def search_dataset(dataset_path: path, k: int, save_directory: dir) -> None:
-	# 	# Run search over a whole dataset and write a StudentSearchResults JSON file.
-	# 	...
+
+	@staticmethod
+	def search_dataset(dataset_path: str, k: int, save_directory: str) -> None:
+		# Run search over a whole dataset and write a StudentSearchResults JSON file.
+		# ◦ search_results: List of MinimalAnswer containing question_id, question,
+		# retrieved_sources, and answer
+		# ◦ k: Number of results requested
+		...
 
 	# @staticmethod
 	# def answer(query: str, k: int) -> None:

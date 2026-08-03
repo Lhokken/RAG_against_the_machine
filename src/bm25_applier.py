@@ -5,6 +5,7 @@ from pydantic import ValidationError
 import bm25s
 from langchain_core.documents import Document
 from src.explorer import Searcher
+import json
 
 
 class Bm25sApplier():
@@ -48,11 +49,20 @@ class Bm25sApplier():
         docs_found = result[0]
         scores_found = scores[0]
         print(f"\n\n\nResults for --- {query} ---\n")
+        text_list = []
         for position, (doc, score) in enumerate(zip(docs_found, scores_found), 1):
             text = doc["Text"]
             metadata = doc["metadati"]["source"]
-            print(
-                f"results {position} - score BM25: {score:.2f}"
-                f" - source: {metadata}\n"
-                )
-            print(f"Text: {text[:200]}\n")
+            first = doc["metadati"]["first_char_index"]
+            last = doc["metadati"]["last_char_index"]
+            text_list.append({
+                f"Results {position}:": f"score BM25: {score:.2f}",
+                f"Source:": f"{metadata}",
+                f"First character index:": f"{first}",
+                f"Last character index:": f"{last}"
+                })
+        print(json.dumps(text_list, indent=4))
+
+    @classmethod
+    def multiple_query(cls) -> None:
+        ...
