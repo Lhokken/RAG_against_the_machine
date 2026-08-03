@@ -2,7 +2,8 @@
 
 import os
 import re
-from pydantic import BaseModel, ValidationError
+import bm25s
+from pydantic import ValidationError
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 from langchain_text_splitters import HTMLHeaderTextSplitter
@@ -11,29 +12,45 @@ from langchain_core.documents import Document
 from pprint import pprint
 
 
-class Searcher(BaseModel):
+class Searcher():
     root_directory: str = "./data/raw/vllm-0.10.1"
     file_list: list[str] = []
     chunk_list: list[(Document)] = []
     valid_extensions: tuple[str, str, str] = (".py", ".txt", ".md")
+    max_chunk_size = 2000
 
-    def search_all(self) -> None:
+
+    @classmethod
+    def analizer(cls, new_max_chunk_size: int) -> list[Document]:
+        
+        cls.max_chunk_size = new_max_chunk_size
+        
+        cls.search_all()
+        # explorer.print_file_list()
+        cls.split_all(cls.file_list)
+
+        return cls.chunk_list
+
+    @classmethod
+    def search_all(cls) -> None:
         try:
-            for root, _, files in os.walk(self.root_directory):
+            for root, _, files in os.walk(cls.root_directory):
                 for file in files:
-                    if file.lower().endswith(self.valid_extensions):
+                    if file.lower().endswith(cls.valid_extensions):
                         file_path = os.path.join(root, file)
-                        self.file_list.append(file_path)
-        except ValidationError as e:
+                        cls.file_list.append(file_path)
+        except (ValidationError, Exception) as e:
             print(e)
 
-    def print_file_list(self) -> None:
-        pprint(self.file_list)
+    @classmethod
+    def print_file_list(cls) -> None:
+        pprint(cls.file_list)
 
-    def split_all(self, file_list: list[str]) -> None:
+    @classmethod
+    def split_all(cls, file_list: list[str]) -> None:
         html_pattern = r'</?(h[1-6]|p|div|span|br|table)[^>]*>'
         txt_chunker = RecursiveCharacterTextSplitter(
-            chunk_size=1900,
+            chunk_size=cls.max_chunk_size,
             chunk_overlap=150,
             add_start_index=True,
             length_function=len
@@ -105,7 +122,7 @@ class Searcher(BaseModel):
                             if "start_index" in doc.metadata:
                                 del doc.metadata["start_index"]
 
-                        self.chunk_list.extend(temp)
+                        cls.chunk_list.extend(temp)
 
             except (
                 ValidationError,

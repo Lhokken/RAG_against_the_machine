@@ -1,6 +1,6 @@
 # Makefile
 
-.PHONY: all install run test lint clean fclean
+.PHONY: all install run index search test lint lint-strict clean fclean
 
 UV      = uv
 PYTHON  = .venv/bin/python
@@ -12,7 +12,13 @@ install:
 	$(UV) sync
 
 run:
-	$(UV) run python src
+	$(UV) run python -m src
+
+index:
+	$(UV) run python -m src index 1500
+
+search:
+	$(UV) run python -m src search "database search" 6
 
 debug:
 	$(UV) run python -m pdb src
