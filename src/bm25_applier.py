@@ -42,7 +42,7 @@ class Bm25sApplier():
             print(f"Error while index cration: {e}")
 
     @classmethod
-    def single_query(cls, query: str, n) -> None:
+    def single_query(cls, query: str, n) -> list[dict]:
         query_tokens = bm25s.tokenize([query])
         if cls.retriever.corpus is None:
             raise ValueError("Corpus not loaded or created. Verify.")
@@ -51,7 +51,7 @@ class Bm25sApplier():
             )
         docs_found = result[0]
         scores_found = scores[0]
-        print(f"\n\nResults for --- {query} ---\n")
+        # print(f"\nResults for\n--- {query} ---\n")
         text_list = []
         for position, (doc, score) in enumerate(zip(docs_found, scores_found), 1):
             text = doc["Text"]
@@ -64,19 +64,26 @@ class Bm25sApplier():
                 f"First character index:": f"{first}",
                 f"Last character index:": f"{last}"
                 })
-        print(json.dumps(text_list, indent=4))
+        # return (json.dumps(text_list, indent=4))
+        return text_list
 
     @classmethod
     def search_dataset_query(cls, dataset_path: str, k: int, save_directory: str) -> None:
-        print("Elaborating query ...\n")
         cls.bm25_index_inizialize()
-        with open(dataset_path, encoding="utf-8") as source: 
+        print("Elaborating query ...\n")
+        with open(dataset_path, encoding="utf-8") as source:
             text_content = json.load(source)
             for elem in text_content["rag_questions"]:
-                print("question_id: ", elem["question_id"])
-                print("question: ", elem["question"], "\n")
-                print("retrieved_sources: ")
-                cls.single_query(elem["question"], k)
+                text_1 = []
+                print("-"*20, "\n")
+                text_2 = cls.single_query(elem["question"], k)
+                text_1.append({
+                    f"question:": f"{elem['question']}",
+                    f"question_id:": f"{elem['question_id']}",
+                    "retrieved_sources:": "test"
+                })
+                pprint(text_1, indent=2, sort_dicts=False)
+                pprint(text_2, indent=4, sort_dicts=False)
                 # print(elem, elem["question_id"], "\n")
             print("\n\n", save_directory, "\n")
 

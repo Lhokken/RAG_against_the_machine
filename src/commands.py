@@ -15,7 +15,7 @@ class CLI():
 	def search(query: str, k: int) -> None:
 		print("Elaborating query ...\n")
 		Bm25sApplier.bm25_index_inizialize()
-		Bm25sApplier.single_query(query, k)
+		print(Bm25sApplier.single_query(query, k))
 		"""serach method"""
 		# • search <query> –k <int>
 		# Return the top-k sources for a single query.
