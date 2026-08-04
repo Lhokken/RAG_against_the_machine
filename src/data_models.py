@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
 from pydantic import BaseModel, ValidationError, Field
+import uuid
+
+
+class MinimalSource(BaseModel):
+	file_path: str
+	first_character_index: int
+	last_character_index: int
 
 
 class UnansweredQuestion(BaseModel):

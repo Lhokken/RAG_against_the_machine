@@ -6,9 +6,20 @@ import bm25s
 from langchain_core.documents import Document
 from src.explorer import Searcher
 import json
-
+from pprint import pprint
 
 class Bm25sApplier():
+    retriever: bm25s.BM25 
+
+    @classmethod
+    def bm25_index_inizialize(cls) -> None:
+        if os.path.exists("./data/processed/Index_bm25s"):
+            print("Index already exist! Ultrafast loading.")
+        else:
+            Bm25sApplier.tokenizer(Searcher.analizer(1900))
+        cls.retriever = bm25s.BM25.load(
+        "./data/processed/Index_bm25s", load_corpus=True
+        )
 
     @classmethod
     def tokenizer(cls, chunk_list: list[Document]) -> list[Document] | None:
@@ -21,9 +32,9 @@ class Bm25sApplier():
                 } for doc in chunk_list]
             text = [doc.page_content for doc in chunk_list]
             corpus_tokens = bm25s.tokenize(text)
-            retriever = bm25s.BM25(k1=1.5, b=0.75)
-            retriever.index(corpus_tokens)
-            retriever.save(
+            cls.retriever = bm25s.BM25(k1=1.5, b=0.75)
+            cls.retriever.index(corpus_tokens)
+            cls.retriever.save(
                 "./data/processed/Index_bm25s", corpus=corpus_saved
                 )
             print("Index created and saved for next run!")
@@ -32,23 +43,15 @@ class Bm25sApplier():
 
     @classmethod
     def single_query(cls, query: str, n) -> None:
-        print("Elaborating query ...\n")
-        if os.path.exists("./data/processed/Index_bm25s"):
-            print("Index already exist! Ultrafast loading.")
-        else:
-            Bm25sApplier.tokenizer(Searcher.analizer(1900))
-        retriever = bm25s.BM25.load(
-        "./data/processed/Index_bm25s", load_corpus=True
-        )
         query_tokens = bm25s.tokenize([query])
-        if retriever.corpus is None:
+        if cls.retriever.corpus is None:
             raise ValueError("Corpus not loaded or created. Verify.")
-        result, scores = retriever.retrieve(
-            query_tokens, corpus=retriever.corpus, k=n
+        result, scores = cls.retriever.retrieve(
+            query_tokens, corpus=cls.retriever.corpus, k=n
             )
         docs_found = result[0]
         scores_found = scores[0]
-        print(f"\n\n\nResults for --- {query} ---\n")
+        print(f"\n\nResults for --- {query} ---\n")
         text_list = []
         for position, (doc, score) in enumerate(zip(docs_found, scores_found), 1):
             text = doc["Text"]
@@ -64,5 +67,25 @@ class Bm25sApplier():
         print(json.dumps(text_list, indent=4))
 
     @classmethod
-    def multiple_query(cls) -> None:
-        ...
+    def search_dataset_query(cls, dataset_path: str, k: int, save_directory: str) -> None:
+        print("Elaborating query ...\n")
+        cls.bm25_index_inizialize()
+        with open(dataset_path, encoding="utf-8") as source: 
+            text_content = json.load(source)
+            for elem in text_content["rag_questions"]:
+                print("question_id: ", elem["question_id"])
+                print("question: ", elem["question"], "\n")
+                print("retrieved_sources: ")
+                cls.single_query(elem["question"], k)
+                # print(elem, elem["question_id"], "\n")
+            print("\n\n", save_directory, "\n")
+
+
+
+            # StudentSearchResults(BaseModel):
+            # {search_results: list[
+            #     question_id: str
+            #     question: str
+            #     retrieved_sources: list[MinimalSource]
+            #     ]
+            # k: int}
