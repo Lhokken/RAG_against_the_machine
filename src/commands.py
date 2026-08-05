@@ -2,6 +2,8 @@
 
 from src.explorer import Searcher
 from src.bm25_applier import Bm25sApplier
+import json
+
 
 class CLI():
 
@@ -15,9 +17,7 @@ class CLI():
 	def search(query: str, k: int) -> None:
 		print("Elaborating query ...\n")
 		Bm25sApplier.bm25_index_inizialize()
-		print(Bm25sApplier.single_query(query, k))
-		"""serach method"""
-		# • search <query> –k <int>
+		print(json.dumps((Bm25sApplier.single_query(query, k)), indent=4))
 		# Return the top-k sources for a single query.
 
 	@staticmethod

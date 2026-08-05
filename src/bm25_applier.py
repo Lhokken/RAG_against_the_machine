@@ -42,7 +42,7 @@ class Bm25sApplier():
             print(f"Error while index cration: {e}")
 
     @classmethod
-    def single_query(cls, query: str, n) -> list[dict]:
+    def single_query(cls, query: str, n) -> list[str]:
         query_tokens = bm25s.tokenize([query])
         if cls.retriever.corpus is None:
             raise ValueError("Corpus not loaded or created. Verify.")
@@ -51,10 +51,8 @@ class Bm25sApplier():
             )
         docs_found = result[0]
         scores_found = scores[0]
-        # print(f"\nResults for\n--- {query} ---\n")
         text_list = []
         for position, (doc, score) in enumerate(zip(docs_found, scores_found), 1):
-            text = doc["Text"]
             metadata = doc["metadati"]["source"]
             first = doc["metadati"]["first_char_index"]
             last = doc["metadati"]["last_char_index"]
@@ -64,8 +62,7 @@ class Bm25sApplier():
                 f"First character index:": f"{first}",
                 f"Last character index:": f"{last}"
                 })
-        # return (json.dumps(text_list, indent=4))
-        return text_list
+        return ((text_list))
 
     @classmethod
     def search_dataset_query(cls, dataset_path: str, k: int, save_directory: str) -> None:
@@ -80,11 +77,9 @@ class Bm25sApplier():
                 text_1.append({
                     f"question:": f"{elem['question']}",
                     f"question_id:": f"{elem['question_id']}",
-                    "retrieved_sources:": "test"
+                    "retrieved_sources:": text_2
                 })
-                pprint(text_1, indent=2, sort_dicts=False)
-                pprint(text_2, indent=4, sort_dicts=False)
-                # print(elem, elem["question_id"], "\n")
+                print(json.dumps(text_1, indent=4))
             print("\n\n", save_directory, "\n")
 
 
