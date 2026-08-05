@@ -15,7 +15,10 @@ class CLI():
 
 	@staticmethod
 	def search(query: str, k: int) -> None:
-		print("Elaborating query ...\n")
+		print(
+			"Elaborating query ...\n"
+			f"{query}"
+		)
 		Bm25sApplier.bm25_index_inizialize()
 		print(json.dumps((Bm25sApplier.single_query(query, k)), indent=4))
 		# Return the top-k sources for a single query.
@@ -26,10 +29,10 @@ class CLI():
 		# Run search over a whole dataset and write a StudentSearchResults JSON file.
 
 
-	# @staticmethod qwen
-	# def answer(query: str, k: int) -> None:
-	# 	# Answer a single query using the retrieved context.
-	# 	...
+	@staticmethod# qwen
+	def answer(query: str, k: int) -> None:
+		Bm25sApplier.answer_single_query(query, k)
+		# Answer a single query using the retrieved context.
 
 	# @staticmethod qwen
 	# def answer_dataset(student_search_results_path: path, save_directory: dir) -> None:
@@ -40,7 +43,7 @@ class CLI():
 	# @staticmethod
 	# def evaluate(student_search_results_path: path, dataset_path: path) -> None:
 	# 	# Report your own recall@k against a ground-truth dataset, for your own testing.
-		...
+		# ...
 
 
 # • For search operations: Use StudentSearchResults model with:

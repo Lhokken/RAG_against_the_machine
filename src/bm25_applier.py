@@ -3,7 +3,10 @@
 import os
 from pydantic import ValidationError
 import bm25s
+# import acc
 from langchain_core.documents import Document
+import torch
+from transformers import pipeline
 from src.explorer import Searcher
 import json
 from pprint import pprint
@@ -42,7 +45,8 @@ class Bm25sApplier():
             print(f"Error while index cration: {e}")
 
     @classmethod
-    def single_query(cls, query: str, n) -> list[str]:
+    def single_query(cls, query: str, n: int) -> list[dict]:
+        # Bm25sApplier.bm25_index_inizialize()
         query_tokens = bm25s.tokenize([query])
         if cls.retriever.corpus is None:
             raise ValueError("Corpus not loaded or created. Verify.")
@@ -68,26 +72,45 @@ class Bm25sApplier():
     def search_dataset_query(cls, dataset_path: str, k: int, save_directory: str) -> None:
         cls.bm25_index_inizialize()
         print("Elaborating query ...\n")
+        result = []
         with open(dataset_path, encoding="utf-8") as source:
             text_content = json.load(source)
             for elem in text_content["rag_questions"]:
                 text_1 = []
-                print("-"*20, "\n")
                 text_2 = cls.single_query(elem["question"], k)
                 text_1.append({
                     f"question:": f"{elem['question']}",
                     f"question_id:": f"{elem['question_id']}",
                     "retrieved_sources:": text_2
                 })
-                print(json.dumps(text_1, indent=4))
+                result.append((text_1))
+            cls.retriever.save(save_directory, corpus=result)
+            print(json.dumps((result), indent=4))
             print("\n\n", save_directory, "\n")
 
 
+    @classmethod
+    def answer_single_query(cls, query: str, k) -> None:
+        Bm25sApplier.bm25_index_inizialize()
+        data_list = cls.single_query(query, k)
+        # print(json.dumps(data_list[0], indent=2))
+        context = Searcher.extractor(data_list[0])
+        # print(context)
 
-            # StudentSearchResults(BaseModel):
-            # {search_results: list[
-            #     question_id: str
-            #     question: str
-            #     retrieved_sources: list[MinimalSource]
-            #     ]
-            # k: int}
+        chat = [
+            {"role": "system", "content": context},
+            {"role": "user", "content": query}
+        ]
+        llm = pipeline(
+            task="text-generation",
+            model="Qwen/Qwen3-0.6B",
+            dtype=torch.bfloat16,
+            device_map="auto"
+            )
+        result = llm(chat, max_new_tokens=64)
+        print("-"*10)
+        print(f"--\n{query}\n--\n")
+        print(result[0]["generated_text"][-1]["content"])
+        print("-"*10)
+
+        

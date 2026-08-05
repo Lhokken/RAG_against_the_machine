@@ -138,3 +138,14 @@ class Searcher():
             print("-" * 50)
             pprint(string)
             print("-" * 50)
+
+    @classmethod
+    def extractor(cls, data_file: dict) -> str:
+        # for key, value in data_file.items():
+        #     print(value)
+        with open(data_file["Source:"],  encoding="utf-8") as source:
+            text_content = source.read()
+        start = int(data_file["First character index:"])
+        end = int(data_file["Last character index:"])
+        return text_content[start:end]
+
