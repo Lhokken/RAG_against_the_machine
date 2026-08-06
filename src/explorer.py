@@ -2,7 +2,6 @@
 
 import os
 import re
-import bm25s
 from pydantic import ValidationError
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_text_splitters import MarkdownHeaderTextSplitter
@@ -19,14 +18,10 @@ class Searcher():
     valid_extensions: tuple[str, str, str] = (".py", ".txt", ".md")
     max_chunk_size = 2000
 
-
     @classmethod
     def analizer(cls, new_max_chunk_size: int) -> list[Document]:
-        
         cls.max_chunk_size = new_max_chunk_size
-        
         cls.search_all()
-        # explorer.print_file_list()
         cls.split_all(cls.file_list)
 
         return cls.chunk_list
@@ -140,12 +135,9 @@ class Searcher():
             print("-" * 50)
 
     @classmethod
-    def extractor(cls, data_file: dict) -> str:
-        # for key, value in data_file.items():
-        #     print(value)
+    def extractor(cls, data_file: dict[str, str]) -> str:
         with open(data_file["Source:"],  encoding="utf-8") as source:
             text_content = source.read()
         start = int(data_file["First character index:"])
         end = int(data_file["Last character index:"])
         return text_content[start:end]
-

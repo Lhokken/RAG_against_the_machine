@@ -7,43 +7,39 @@ import json
 
 class CLI():
 
-	@staticmethod
-	def index(max_chunk_size: int) -> None:
-		Bm25sApplier.tokenizer(Searcher.analizer(max_chunk_size))
-		# se cambia il max_chunk_size e necessario ricreare il corpus ?
-		# Ingest data/raw/ and build the index under data/processed/.
+    @staticmethod
+    def index(max_chunk_size: int) -> None:
+        Bm25sApplier.tokenizer(Searcher.analizer(max_chunk_size))
 
-	@staticmethod
-	def search(query: str, k: int) -> None:
-		print(
-			"Elaborating query ...\n"
-			f"{query}"
-		)
-		Bm25sApplier.bm25_index_inizialize()
-		print(json.dumps((Bm25sApplier.single_query(query, k)), indent=4))
-		# Return the top-k sources for a single query.
+    @staticmethod
+    def search(query: str, k: int) -> None:
+        print(
+            "Elaborating query ...\n"
+            f"{query}"
+        )
+        Bm25sApplier.bm25_index_inizialize()
+        print(json.dumps((Bm25sApplier.single_query(query, k)), indent=4))
 
-	@staticmethod
-	def search_dataset(dataset_path: str, k: int, save_directory: str) -> None:
-		Bm25sApplier.search_dataset_query(dataset_path, k, save_directory)
-		# Run search over a whole dataset and write a StudentSearchResults JSON file.
+    @staticmethod
+    def search_dataset(dataset_path: str, k: int, save_directory: str) -> None:
+        Bm25sApplier.search_dataset_query(dataset_path, k, save_directory)
+
+    @staticmethod
+    def answer(query: str, k: int) -> None:
+        Bm25sApplier.answer_single_query(query, k)
+        # Answer a single query using the retrieved context.
+
+    @staticmethod
+    def answer_dataset(student_search_results_path: str, save_directory: str) -> None:
+        Bm25sApplier.answer_dataset_query(student_search_results_path, save_directory)
+    	# Generate answers for a dataset, producing a StudentSearchResultsAndAnswer
+    	# JSON file.
 
 
-	@staticmethod# qwen
-	def answer(query: str, k: int) -> None:
-		Bm25sApplier.answer_single_query(query, k)
-		# Answer a single query using the retrieved context.
-
-	# @staticmethod qwen
-	# def answer_dataset(student_search_results_path: path, save_directory: dir) -> None:
-	# 	# Generate answers for a dataset, producing a StudentSearchResultsAndAnswer
-	# 	# JSON file.
-	# 	...
-
-	# @staticmethod
-	# def evaluate(student_search_results_path: path, dataset_path: path) -> None:
-	# 	# Report your own recall@k against a ground-truth dataset, for your own testing.
-		# ...
+    # @staticmethod
+    # def evaluate(student_search_results_path: path, dataset_path: path) -> None:
+    # 	# Report your own recall@k against a ground-truth dataset, for your own testing.
+        # ...
 
 
 # • For search operations: Use StudentSearchResults model with:

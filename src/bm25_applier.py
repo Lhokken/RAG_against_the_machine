@@ -3,16 +3,15 @@
 import os
 from pydantic import ValidationError
 import bm25s
-# import acc
 from langchain_core.documents import Document
 import torch
 from transformers import pipeline
 from src.explorer import Searcher
 import json
-from pprint import pprint
+
 
 class Bm25sApplier():
-    retriever: bm25s.BM25 
+    retriever: bm25s.BM25
 
     @classmethod
     def bm25_index_inizialize(cls) -> None:
@@ -21,11 +20,11 @@ class Bm25sApplier():
         else:
             Bm25sApplier.tokenizer(Searcher.analizer(1900))
         cls.retriever = bm25s.BM25.load(
-        "./data/processed/Index_bm25s", load_corpus=True
-        )
+            "./data/processed/Index_bm25s", load_corpus=True
+            )
 
     @classmethod
-    def tokenizer(cls, chunk_list: list[Document]) -> list[Document] | None:
+    def tokenizer(cls, chunk_list: list[Document]) -> None:
         print("Calculating Index ...\n")
         try:
             corpus_saved = [
@@ -45,8 +44,7 @@ class Bm25sApplier():
             print(f"Error while index cration: {e}")
 
     @classmethod
-    def single_query(cls, query: str, n: int) -> list[dict]:
-        # Bm25sApplier.bm25_index_inizialize()
+    def single_query(cls, query: str, n: int) -> list[dict[str, str]]:
         query_tokens = bm25s.tokenize([query])
         if cls.retriever.corpus is None:
             raise ValueError("Corpus not loaded or created. Verify.")
@@ -56,20 +54,27 @@ class Bm25sApplier():
         docs_found = result[0]
         scores_found = scores[0]
         text_list = []
-        for position, (doc, score) in enumerate(zip(docs_found, scores_found), 1):
+        for position, (doc, score) in enumerate(
+                zip(docs_found, scores_found), 1
+                ):
             metadata = doc["metadati"]["source"]
             first = doc["metadati"]["first_char_index"]
             last = doc["metadati"]["last_char_index"]
             text_list.append({
                 f"Results {position}:": f"score BM25: {score:.2f}",
-                f"Source:": f"{metadata}",
-                f"First character index:": f"{first}",
-                f"Last character index:": f"{last}"
+                "Source:": f"{metadata}",
+                "First character index:": f"{first}",
+                "Last character index:": f"{last}"
                 })
         return ((text_list))
 
     @classmethod
-    def search_dataset_query(cls, dataset_path: str, k: int, save_directory: str) -> None:
+    def search_dataset_query(
+            cls,
+            dataset_path: str,
+            k: int,
+            save_directory: str
+            ) -> None:
         cls.bm25_index_inizialize()
         print("Elaborating query ...\n")
         result = []
@@ -79,8 +84,8 @@ class Bm25sApplier():
                 text_1 = []
                 text_2 = cls.single_query(elem["question"], k)
                 text_1.append({
-                    f"question:": f"{elem['question']}",
-                    f"question_id:": f"{elem['question_id']}",
+                    "question:": f"{elem['question']}",
+                    "question_id:": f"{elem['question_id']}",
                     "retrieved_sources:": text_2
                 })
                 result.append((text_1))
@@ -89,7 +94,7 @@ class Bm25sApplier():
             print("\n\n", save_directory, "\n")
 
     @classmethod
-    def answer_single_query(cls, query: str, k) -> None:
+    def answer_single_query(cls, query: str, k: int) -> None:
         Bm25sApplier.bm25_index_inizialize()
         data_list = cls.single_query(query, k)
         context = Searcher.extractor(data_list[0])
@@ -107,8 +112,17 @@ Answer to this {query} using information from this {context}:
             )
         id_bloccati = []
         if llm.tokenizer is not None:
-            id_bloccati = llm.tokenizer.encode("<think>", add_special_tokens=False)
-
+            id_bloccati = llm.tokenizer.encode(
+                "<think>", add_special_tokens=False
+                )
         result = llm(chat, max_new_tokens=32, bad_words_ids=[id_bloccati])
         print(f"\n\n--{query}--\n")
         print(result[0]["generated_text"])
+
+    @classmethod
+    def answer_dataset_query(
+            cls,
+            student_search_results_path: str,
+            save_directory: str
+            ) -> None:
+        ...
