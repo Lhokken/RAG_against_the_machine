@@ -24,7 +24,7 @@ search_dataset:
 	$(UV) run python -m src search_dataset "./data/datasets/UnansweredQuestions/dataset_docs_public.json" 1 "./data/output/search_result"
 
 answer:
-	$(UV) run python -m src answer "print function" 1
+	$(UV) run python -m src answer "What activation formats does the fused batched MoE layer return in vLLM?" 1
 
 answer_dataset:
 	$(UV) run python -m src answer_dataset "./data/datasets/AnsweredQuestions" "/data/output"

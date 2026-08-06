@@ -88,29 +88,27 @@ class Bm25sApplier():
             print(json.dumps((result), indent=4))
             print("\n\n", save_directory, "\n")
 
-
     @classmethod
     def answer_single_query(cls, query: str, k) -> None:
         Bm25sApplier.bm25_index_inizialize()
         data_list = cls.single_query(query, k)
-        # print(json.dumps(data_list[0], indent=2))
         context = Searcher.extractor(data_list[0])
-        # print(context)
-
-        chat = [
-            {"role": "system", "content": context},
-            {"role": "user", "content": query}
-        ]
+        chat = f"""<|im_start|>
+</think>
+Answer to this {query} using information from this {context}:
+-----------\n
+<|im_end|>\n
+"""
         llm = pipeline(
             task="text-generation",
             model="Qwen/Qwen3-0.6B",
             dtype=torch.bfloat16,
             device_map="auto"
             )
-        result = llm(chat, max_new_tokens=64)
-        print("-"*10)
-        print(f"--\n{query}\n--\n")
-        print(result[0]["generated_text"][-1]["content"])
-        print("-"*10)
+        id_bloccati = []
+        if llm.tokenizer is not None:
+            id_bloccati = llm.tokenizer.encode("<think>", add_special_tokens=False)
 
-        
+        result = llm(chat, max_new_tokens=32, bad_words_ids=[id_bloccati])
+        print(f"\n\n--{query}--\n")
+        print(result[0]["generated_text"])
