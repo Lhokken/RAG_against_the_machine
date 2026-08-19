@@ -9,29 +9,51 @@ class CLI():
 
     @staticmethod
     def index(max_chunk_size: int) -> None:
-        Bm25sApplier.tokenizer(Searcher.analizer(max_chunk_size))
+        """Ingest data/raw/ and build the index under data/processed/.
+        """
+        Bm25sApplier.bm25_index_inizialize(max_chunk_size)
 
     @staticmethod
-    def search(query: str, k: int) -> None:
+    def search(query: str, k: int) -> str:
+        """Return the top-k sources for a single query.
+        """
         print(
             "Elaborating query ...\n"
             f"{query}"
         )
-        Bm25sApplier.bm25_index_inizialize()
-        print(json.dumps((Bm25sApplier.single_query(query, k)), indent=4))
+        result = json.dumps((Bm25sApplier.search_single_query(query, k)), indent=4)
+        # print(result)
+        return result
 
     @staticmethod
-    def search_dataset(dataset_path: str, k: int, save_directory: str) -> None:
+    def search_dataset(
+            dataset_path: str,
+            k: int,
+            save_directory: str
+            ) -> None:
+        """Run search over a whole dataset and write a
+        StudentSearchResults JSON file.
+        """
         Bm25sApplier.search_dataset_query(dataset_path, k, save_directory)
 
     @staticmethod
     def answer(query: str, k: int) -> None:
+        """Answer a single query using the retrieved context.
+        """
         Bm25sApplier.answer_single_query(query, k)
-        # Answer a single query using the retrieved context.
 
     @staticmethod
-    def answer_dataset(student_search_results_path: str, save_directory: str) -> None:
-        Bm25sApplier.answer_dataset_query(student_search_results_path, save_directory)
+    def answer_dataset(
+            student_search_results_path: str,
+            save_directory: str
+            ) -> None:
+        """Generate answers for a dataset, producing
+        a StudentSearchResultsAndAnswer JSON file.
+        """
+        Bm25sApplier.answer_dataset_query(
+            student_search_results_path,
+            save_directory
+            )
     	# Generate answers for a dataset, producing a StudentSearchResultsAndAnswer
     	# JSON file.
 

@@ -20,10 +20,10 @@ class Searcher():
 
     @classmethod
     def analizer(cls, new_max_chunk_size: int) -> list[Document]:
-        cls.max_chunk_size = new_max_chunk_size
+        if new_max_chunk_size < 2000:
+            cls.max_chunk_size = new_max_chunk_size
         cls.search_all()
         cls.split_all(cls.file_list)
-
         return cls.chunk_list
 
     @classmethod

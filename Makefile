@@ -18,16 +18,16 @@ index:
 	$(UV) run python -m src index 1500
 
 search:
-	$(UV) run python -m src search "database search" 6
+	$(UV) run python -m src search "database search" 3
 
 search_dataset:
-	$(UV) run python -m src search_dataset "./data/datasets/UnansweredQuestions/dataset_docs_public.json" 1 "./data/output/search_result"
+	$(UV) run python -m src search_dataset "./data/datasets/UnansweredQuestions/dataset_docs_public.json" 2 "./data/output/search_result"
 
 answer:
 	$(UV) run python -m src answer "What activation formats does the fused batched MoE layer return in vLLM?" 1
 
 answer_dataset:
-	$(UV) run python -m src answer_dataset "./data/datasets/AnsweredQuestions" "/data/output"
+	$(UV) run python -m src answer_dataset "./data/datasets/AnsweredQuestions" "/data/output/search_result"
 
 evaluate:
 	$(UV) run python -m src answer_dataset "./data/datasets/AnsweredQuestions" "./data/raw/vllm-0.10.1"
