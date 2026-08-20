@@ -54,8 +54,6 @@ class CLI():
             student_search_results_path,
             save_directory
             )
-    	# Generate answers for a dataset, producing a StudentSearchResultsAndAnswer
-    	# JSON file.
 
 
     # @staticmethod

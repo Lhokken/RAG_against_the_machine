@@ -49,7 +49,7 @@ class Bm25sApplier():
         for each document type and save the result
         """
         if os.path.exists("./data/processed/Index_bm25s"):
-            print("Index already exist! Ultrafast loading.")
+            print("---\nIndex already exist! Ultrafast loading.\n---")
         else:
             Bm25sApplier.tokenizer(Searcher.analizer(k))
         cls.retriever = bm25s.BM25.load(
@@ -94,7 +94,7 @@ class Bm25sApplier():
             k: int,
             save_directory: str
             ) -> None:
-        cls.bm25_index_inizialize()
+        # cls.bm25_index_inizialize()
         print("Elaborating query ...\n")
         result = []
         with open(dataset_path, encoding="utf-8") as source:
@@ -103,24 +103,34 @@ class Bm25sApplier():
                 text_1 = []
                 text_2 = cls.search_single_query(elem["question"], k)
                 text_1.append({
-                    "question_id:": f"{elem['question_id']}",
-                    "question:": f"{elem['question']}",
-                    "retrieved_sources:": text_2
+                    "question_id": f"{elem['question_id']}",
+                    "question": f"{elem['question']}",
+                    "retrieved_sources": text_2
                 })
                 result.append((text_1))
-            cls.retriever.save(save_directory, corpus=result)
-            print(json.dumps((result), indent=4))
-            print("\n\n", save_directory, "\n")
+            with open(save_directory, "w") as file_output:
+                json.dump(result, file_output, indent=4)
+            # cls.retriever.save(save_directory, corpus=result)
+            # print(json.dumps((result), indent=4))
+            # print("\n\n", save_directory, "\n")
 
     @classmethod
     def answer_single_query(cls, query: str, k: int) -> str:
-        Bm25sApplier.bm25_index_inizialize()
-        data_list = cls.search_single_query(query, k)
-        context = Searcher.extractor(data_list[0])
+        # Bm25sApplier.bm25_index_inizialize()
+        context: str = ""
+        try:
+            if k <= 0:
+                raise IndexError
+            else:
+                data_list = cls.search_single_query(query, k)
+                context = json.dumps(data_list, indent=2)
+                # context = Searcher.extractor(data_list[0])
+        except IndexError as e:
+            print(f"Parameter k must be >0: {e}")
+            exit()
         chat = f"""<|im_start|>system
-This is your knowledge:
-You must answer to a query from the user about your knowledge.
-Do not think, give short direct answer.
+Output ONLY the factual answer.
+Start your response immediately with the requested information.
 {context}
 <|im_end|>
 <|im_start|>user
@@ -135,7 +145,6 @@ Do not think, give short direct answer.
             device_map="auto"
             )
         blocked_ids: list[list] = []
-        end_ids: list[list] = []
         if llm.tokenizer is not None:
             blocked_ids.append(llm.tokenizer.encode(
                 "<think>", add_special_tokens=False
@@ -143,8 +152,6 @@ Do not think, give short direct answer.
             blocked_ids.append(llm.tokenizer.encode(
                 "</think>", add_special_tokens=False
                 ))
-            end_ids.append(llm.tokenizer.encode(
-                ".", add_special_tokens=False))
         while(True):
             result = llm(
                 chat, max_new_tokens=256,
@@ -162,7 +169,33 @@ Do not think, give short direct answer.
     def answer_dataset_query(
             cls,
             student_search_results_path: str,
-            save_directory: str
+            save_directory: str,
             ) -> None:
         with open(student_search_results_path, encoding="utf-8") as source:
-            text_content = json.load(source)
+            question_list = json.load(source)
+            # print(json.dumps(question_list, indent=4))
+        _answer_list: dict[
+            str, list[dict[str, str | list[dict[str, str | int]]]] | int
+            ] = {
+            "search_results": [{
+                "question_id": "",
+                "question": "",
+                "retrieved_sources": [{
+                    "file_path": "",
+                    "first_character_index": 0,
+                    "last_character_index": 0
+                }],
+                "answer": ""
+            }],
+            "k": 0
+            }
+        for elem in question_list:
+            for qst, qst_id, ret_src in elem.items():
+                k = len(ret_src)
+                answer = 
+                n_result = {
+                    "question_id": qst_id,
+                    "question":  qst,
+                    "retrieved_sources": ret_src,
+                    "answer": answer
+                }
