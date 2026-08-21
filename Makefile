@@ -15,13 +15,16 @@ run:
 	$(UV) run python -m src
 
 index:
-	$(UV) run python -m src index 1500
+	$(UV) run python -m src index --max_chunk_size 1500
 
 search:
 	$(UV) run python -m src search "database search" 3
 
 search_dataset:
-	$(UV) run python -m src search_dataset "./data/datasets/UnansweredQuestions/dataset_docs_public.json" 2 "./data/output/search_result/corpus.json"
+	$(UV) run python -m src search_dataset \
+	--dataset_path data/datasets/UnansweredQuestions/dataset_docs_public.json \
+	--k 1 \
+	--save_directory data/output/search_results/UnansweredQuestions
 
 answer:
 	$(UV) run python -m src answer "What activation formats does the fused batched MoE layer return in vLLM?" 1
@@ -34,6 +37,12 @@ evaluate:
 
 debug:
 	$(UV) run python -m pdb src
+
+moul:
+	./moulinette evaluate_student_search_results \
+	data/output/search_results/UnansweredQuestions/dataset_docs_public.json \
+	data/datasets/AnsweredQuestions/dataset_docs_public.json \
+	--k 10 --max_context_length 2000
 
 # Run pdb in a shell
 # 	Command		Short	What it does

@@ -37,7 +37,7 @@ class Bm25sApplier():
             cls.retriever.save(
                 "./data/processed/Index_bm25s", corpus=corpus_saved
                 )
-            print("Index created and saved for next run!")
+            print("Ingestion complete! Indices saved under data/processed/")
         except (ValidationError, Exception) as e:
             print(f"Error while index cration: {e}")
 
@@ -64,7 +64,7 @@ class Bm25sApplier():
         a list of dictionaries with the most significant data based on the
         given query.
         """
-        cls.bm25_index_inizialize()
+        # cls.bm25_index_inizialize()
         query_tokens = bm25s.tokenize([query])
         if cls.retriever.corpus is None:
             raise ValueError("Corpus not loaded or created. Verify.")
@@ -81,9 +81,9 @@ class Bm25sApplier():
             first = doc["metadati"]["first_char_index"]
             last = doc["metadati"]["last_char_index"]
             text_list.append({
-                "Source:": f"{metadata}",
-                "First character index:": f"{first}",
-                "Last character index:": f"{last}"
+                "file_path": metadata[2:],
+                "first_character_index": first,
+                "last_character_index": last
                 })
         return ((text_list))
 
@@ -94,28 +94,30 @@ class Bm25sApplier():
             k: int,
             save_directory: str
             ) -> None:
-        # cls.bm25_index_inizialize()
         print("Elaborating query ...\n")
         result = []
+        cls.bm25_index_inizialize()
         with open(dataset_path, encoding="utf-8") as source:
             text_content = json.load(source)
             for elem in tqdm(text_content["rag_questions"]):
-                text_1 = []
+                text_1 = {}
                 text_2 = cls.search_single_query(elem["question"], k)
-                text_1.append({
+                text_1.update({
                     "question_id": f"{elem['question_id']}",
                     "question": f"{elem['question']}",
                     "retrieved_sources": text_2
                 })
                 result.append((text_1))
-            with open(save_directory, "w") as file_output:
-                json.dump(result, file_output, indent=4)
+            os.makedirs(save_directory, exist_ok=True)
+            dict_result ={"search_results": result, "k": k}
+            with open(f"{save_directory}/dataset_docs_public.json", "w") as file_output:
+                json.dump(dict_result, file_output, indent=2)
             # cls.retriever.save(save_directory, corpus=result)
             # print(json.dumps((result), indent=4))
             # print("\n\n", save_directory, "\n")
 
     @classmethod
-    def answer_single_query(cls, query: str, k: int) -> str:
+    def answer_single_query(cls, query: str, k: int) -> None:
         # Bm25sApplier.bm25_index_inizialize()
         context: str = ""
         try:
@@ -128,6 +130,10 @@ class Bm25sApplier():
         except IndexError as e:
             print(f"Parameter k must be >0: {e}")
             exit()
+        cls.single_query(query, context)
+
+    @classmethod
+    def single_query(cls, query: str, context: str) -> str:
         chat = f"""<|im_start|>system
 Output ONLY the factual answer.
 Start your response immediately with the requested information.
@@ -160,10 +166,10 @@ Start your response immediately with the requested information.
                 )[0]['generated_text']
             if len(result) > 120:
                 break
-        print(f"\n\n--{query}--\n")
+        # print(f"\n\n--{query}--\n")
         answer = result.rpartition('\n')[0]
-        print(f"\n===\n{answer}\n===\n")
-        return result
+        # print(f"\n===\n{answer}\n===\n")
+        return answer
 
     @classmethod
     def answer_dataset_query(
@@ -173,10 +179,11 @@ Start your response immediately with the requested information.
             ) -> None:
         with open(student_search_results_path, encoding="utf-8") as source:
             question_list = json.load(source)
-            # print(json.dumps(question_list, indent=4))
-        _answer_list: dict[
-            str, list[dict[str, str | list[dict[str, str | int]]]] | int
-            ] = {
+            # print(json.dumps(question_list, indent=2))
+        # answer_list: list[dict[
+        #     str, list[dict[str, str | list[dict[str, str | int]]]] | int
+        #     ]]
+        answer_list = [{
             "search_results": [{
                 "question_id": "",
                 "question": "",
@@ -188,14 +195,24 @@ Start your response immediately with the requested information.
                 "answer": ""
             }],
             "k": 0
+            }]
+        n_result: dict[str, str] = {}
+        for elem in tqdm(question_list):
+            sources = (elem[0])["retrieved_sources"]
+            question = (elem[0])["question"]
+            question_id = (elem[0])["question_id"]
+            context: str = ""
+            for source in sources:
+                context += Searcher.extractor(source)
+            # print(f"---\n{context}\n---")
+
+            answer = cls.single_query(question, context)
+            # print(answer)
+            n_result = {
+                "question_id": question_id,
+                "question": question,
+                "retrieved_sources": context,
+                "answer": answer
             }
-        for elem in question_list:
-            for qst, qst_id, ret_src in elem.items():
-                k = len(ret_src)
-                answer = 
-                n_result = {
-                    "question_id": qst_id,
-                    "question":  qst,
-                    "retrieved_sources": ret_src,
-                    "answer": answer
-                }
+            answer_list.append(n_result)
+        print(json.dumps(answer_list, indent=2))
