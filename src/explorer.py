@@ -136,8 +136,8 @@ class Searcher():
 
     @classmethod
     def extractor(cls, data_file: dict[str, str]) -> str:
-        with open(data_file["Source:"],  encoding="utf-8") as source:
+        with open(data_file["file_path"],  encoding="utf-8") as source:
             text_content = source.read()
-        start = int(data_file["First character index:"])
-        end = int(data_file["Last character index:"])
+        start = int(data_file["first_character_index"])
+        end = int(data_file["last_character_index"])
         return text_content[start:end]

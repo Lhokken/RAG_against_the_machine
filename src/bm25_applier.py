@@ -6,6 +6,7 @@ import bm25s
 from tqdm import tqdm
 from langchain_core.documents import Document
 import torch
+import transformers
 from transformers import pipeline
 from src.explorer import Searcher
 import json
@@ -112,9 +113,6 @@ class Bm25sApplier():
             dict_result ={"search_results": result, "k": k}
             with open(f"{save_directory}/dataset_docs_public.json", "w") as file_output:
                 json.dump(dict_result, file_output, indent=2)
-            # cls.retriever.save(save_directory, corpus=result)
-            # print(json.dumps((result), indent=4))
-            # print("\n\n", save_directory, "\n")
 
     @classmethod
     def answer_single_query(cls, query: str, k: int) -> None:
@@ -144,11 +142,20 @@ Start your response immediately with the requested information.
 <|im_end|>
 <|im_start|>assistant
 """
+        if len(context) > 9000:
+            dev_type = "cpu"
+        else:
+            dev_type = "cuda"
+        print(
+            f"Context lenght: {len(context)}\n"
+            f"Device used: {dev_type}\n"
+            )
         llm = pipeline(
             task="text-generation",
             model="Qwen/Qwen3-0.6B",
             dtype=torch.bfloat16,
-            device_map="auto"
+            # device_map="auto",
+            device=dev_type
             )
         blocked_ids: list[list] = []
         if llm.tokenizer is not None:
@@ -158,16 +165,22 @@ Start your response immediately with the requested information.
             blocked_ids.append(llm.tokenizer.encode(
                 "</think>", add_special_tokens=False
                 ))
+        result: str = ""
         while(True):
-            result = llm(
-                chat, max_new_tokens=256,
-                return_full_text=False,
-                bad_words_ids=blocked_ids
-                )[0]['generated_text']
-            if len(result) > 120:
+            try:
+                result = llm(
+                    chat,
+                    max_new_tokens=64,
+                    return_full_text=False,
+                    bad_words_ids=blocked_ids
+                    )[0]['generated_text']
+            except (ValidationError, RuntimeError, Exception) as e:
+                print(f"\nMemory error: {e}=====\n")
+                exit()
+            if len(result.strip()) > 50:
                 break
         # print(f"\n\n--{query}--\n")
-        answer = result.rpartition('\n')[0]
+        answer = result.rpartition('\n')[0].strip()
         # print(f"\n===\n{answer}\n===\n")
         return answer
 
@@ -177,42 +190,45 @@ Start your response immediately with the requested information.
             student_search_results_path: str,
             save_directory: str,
             ) -> None:
+        transformers.logging.set_verbosity_error()
         with open(student_search_results_path, encoding="utf-8") as source:
-            question_list = json.load(source)
-            # print(json.dumps(question_list, indent=2))
-        # answer_list: list[dict[
-        #     str, list[dict[str, str | list[dict[str, str | int]]]] | int
-        #     ]]
-        answer_list = [{
-            "search_results": [{
-                "question_id": "",
-                "question": "",
-                "retrieved_sources": [{
-                    "file_path": "",
-                    "first_character_index": 0,
-                    "last_character_index": 0
-                }],
-                "answer": ""
-            }],
-            "k": 0
-            }]
+            question_list = json.load(source)["search_results"]
+        answer_list = []
         n_result: dict[str, str] = {}
+        cls.bm25_index_inizialize()
+        counter: int = 0
         for elem in tqdm(question_list):
-            sources = (elem[0])["retrieved_sources"]
-            question = (elem[0])["question"]
-            question_id = (elem[0])["question_id"]
+            counter +=1
+            sources = (elem)["retrieved_sources"]
+            question = (elem)["question"]
+            question_id = (elem)["question_id"]
             context: str = ""
             for source in sources:
                 context += Searcher.extractor(source)
-            # print(f"---\n{context}\n---")
-
+            print(f"----------\nElaborating query number: {counter}")
             answer = cls.single_query(question, context)
-            # print(answer)
+            print(
+                "\n=== Answer: ===\n"
+                f"{answer}\n"
+                "======\n"
+                )
             n_result = {
                 "question_id": question_id,
                 "question": question,
-                "retrieved_sources": context,
+                "retrieved_sources": sources,
                 "answer": answer
             }
             answer_list.append(n_result)
-        print(json.dumps(answer_list, indent=2))
+            # if counter == 10:
+            #     break
+        final_list = {"search_results": answer_list,
+                      "k": len(question_list[0]["retrieved_sources"])}
+        os.makedirs(save_directory, exist_ok=True)
+        with open(f"{save_directory}/dataset_docs_public.json", "w") as file_output:
+            json.dump(final_list, file_output, indent=2)
+
+        print(
+            f"\nLoaded 100 questions ... Processed {counter} of {len(question_list)} questions\n"
+            f"Saved student_search_results_and_answer to .../{save_directory}")
+
+        print("\a")
