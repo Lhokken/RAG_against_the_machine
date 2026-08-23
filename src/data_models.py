@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from pydantic import BaseModel, ValidationError, Field
+from pydantic import BaseModel, Field
 import uuid
 
 

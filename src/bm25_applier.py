@@ -2,6 +2,7 @@
 
 import os
 from pydantic import ValidationError
+from typing import Any
 import bm25s
 from tqdm import tqdm
 from langchain_core.documents import Document
@@ -10,7 +11,7 @@ import transformers
 from transformers import pipeline
 from src.explorer import Searcher
 import json
-from src import data_models as dm
+# from src import data_models as dm
 
 
 class Bm25sApplier():
@@ -43,11 +44,12 @@ class Bm25sApplier():
             print(f"Error while index cration: {e}")
 
     @classmethod
-    def bm25_index_inizialize(cls, k=2000) -> None:
+    def bm25_index_inizialize(cls, k: int = 2000) -> None:
         """This method create the index
-        
-        It search the full database, split all documents with the right function
-        for each document type and save the result
+
+        It search the full database, split all documents
+        with the right function for each document type
+        and save the result
         """
         if os.path.exists("./data/processed/Index_bm25s"):
             print("---\nIndex already exist! Ultrafast loading.\n---")
@@ -60,7 +62,7 @@ class Bm25sApplier():
     @classmethod
     def search_single_query(cls, query: str, n: int) -> list[dict[str, str]]:
         """This method return the top k number resources
-        
+
         Based on a single query this method uses bm25s criteria to return
         a list of dictionaries with the most significant data based on the
         given query.
@@ -110,8 +112,10 @@ class Bm25sApplier():
                 })
                 result.append((text_1))
             os.makedirs(save_directory, exist_ok=True)
-            dict_result ={"search_results": result, "k": k}
-            with open(f"{save_directory}/dataset_docs_public.json", "w") as file_output:
+            dict_result = {"search_results": result, "k": k}
+            with open(
+                    f"{save_directory}/dataset_docs_public.json", "w"
+                    ) as file_output:
                 json.dump(dict_result, file_output, indent=2)
 
     @classmethod
@@ -157,7 +161,7 @@ Start your response immediately with the requested information.
             # device_map="auto",
             device=dev_type
             )
-        blocked_ids: list[list] = []
+        blocked_ids: list[list[int] | Any] = []
         if llm.tokenizer is not None:
             blocked_ids.append(llm.tokenizer.encode(
                 "<think>", add_special_tokens=False
@@ -198,7 +202,7 @@ Start your response immediately with the requested information.
         cls.bm25_index_inizialize()
         counter: int = 0
         for elem in tqdm(question_list):
-            counter +=1
+            counter += 1
             sources = (elem)["retrieved_sources"]
             question = (elem)["question"]
             question_id = (elem)["question_id"]
@@ -224,11 +228,14 @@ Start your response immediately with the requested information.
         final_list = {"search_results": answer_list,
                       "k": len(question_list[0]["retrieved_sources"])}
         os.makedirs(save_directory, exist_ok=True)
-        with open(f"{save_directory}/dataset_docs_public.json", "w") as file_output:
+        with open(
+                f"{save_directory}/dataset_docs_public.json", "w"
+                ) as file_output:
             json.dump(final_list, file_output, indent=2)
 
         print(
-            f"\nLoaded 100 questions ... Processed {counter} of {len(question_list)} questions\n"
-            f"Saved student_search_results_and_answer to .../{save_directory}")
+            f"\nLoaded 100 questions ... Processed {counter} "
+            F"of {len(question_list)} questions\n"
+            f"Save student_search_results_and_answer to .../{save_directory}")
 
         print("\a")
