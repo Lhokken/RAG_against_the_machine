@@ -37,6 +37,7 @@ class CLI():
         StudentSearchResults JSON file.
         """
         Bm25sApplier.search_dataset_query(dataset_path, k, save_directory)
+        print("Next command:\n--moulinette--\n\n")
 
     @staticmethod
     def answer(query: str, k: int) -> None:
@@ -65,3 +66,7 @@ class CLI():
 
         a ground-truth dataset, for your own testing."""
         pass
+
+    @staticmethod
+    def moulinette() -> None:
+        print("Next command:\n--answer_dataset--\n\n")

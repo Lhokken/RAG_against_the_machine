@@ -2,7 +2,7 @@
 
 .PHONY: all install run search answer evaluate debug \
 	lint lint-strict clean fclean re \
-	index search_dataset moul answer_dataset
+	index search_dataset moulinette answer_dataset
 
 UV      = uv
 PYTHON  = .venv/bin/python
@@ -38,11 +38,12 @@ search_dataset:
 	--k 6 \
 	--save_directory data/output/search_results/UnansweredQuestions
 
-moul:
+moulinette:
 	./moulinette evaluate_student_search_results \
 	data/output/search_results/UnansweredQuestions/dataset_docs_public.json \
 	data/datasets/AnsweredQuestions/dataset_docs_public.json \
 	--k 10 --max_context_length 2000
+	$(UV) run python -m src moulinette
 
 answer_dataset:
 	$(UV) run python -m src answer_dataset \
@@ -69,8 +70,6 @@ fclean:
 	rm -rf .venv
 	rm -rf data/processed/Index_bm25s
 	rm -rf data/output
-# 	rm -rf data/output/search_results_and_answer
-# 	rm -rf data/output/search_results
 
 re: clean install
 

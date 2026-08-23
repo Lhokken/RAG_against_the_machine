@@ -117,6 +117,8 @@ class Bm25sApplier():
                     f"{save_directory}/dataset_docs_public.json", "w"
                     ) as file_output:
                 json.dump(dict_result, file_output, indent=2)
+            print("---\nStudentSearchResults JSON file saved in:\n"
+                  f"{save_directory}\n---\n")
 
     @classmethod
     def answer_single_query(cls, query: str, k: int) -> None:
@@ -183,9 +185,7 @@ Start your response immediately with the requested information.
                 exit()
             if len(result.strip()) > 50:
                 break
-        # print(f"\n\n--{query}--\n")
         answer = result.rpartition('\n')[0].strip()
-        # print(f"\n===\n{answer}\n===\n")
         return answer
 
     @classmethod
@@ -207,7 +207,7 @@ Start your response immediately with the requested information.
             question = (elem)["question"]
             question_id = (elem)["question_id"]
             context: str = ""
-            for source in sources:
+            for source in tqdm(sources):
                 context += Searcher.extractor(source)
             print(f"----------\nElaborating query number: {counter}")
             answer = cls.single_query(question, context)
