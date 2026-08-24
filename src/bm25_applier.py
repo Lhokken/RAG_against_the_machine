@@ -19,7 +19,11 @@ class Bm25sApplier():
     retriever: bm25s.BM25
 
     @classmethod
-    def tokenizer(cls, chunk_list: list[Document], save_directory: str = "data/processed") -> None:
+    def tokenizer(
+            cls,
+            chunk_list: list[Document],
+            save_directory: str = "data/processed"
+            ) -> None:
         """This method create the corpus based on a list of given text chunks
 
         It save the result in the ricght directory and return an error message
@@ -44,7 +48,11 @@ class Bm25sApplier():
             print(f"Error while index cration: {e}")
 
     @classmethod
-    def bm25_index_inizialize(cls, k: int = 2000, save_directory: str = "data/processed") -> None:
+    def bm25_index_inizialize(
+            cls,
+            k: int = 2000,
+            save_directory: str = "data/processed"
+            ) -> None:
         """This method create the index
 
         It search the full database, split all documents

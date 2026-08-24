@@ -38,7 +38,12 @@ class CLI():
         """Run search over a whole dataset and write a
         StudentSearchResults JSON file.
         """
-        Bm25sApplier.search_dataset_query(dataset_path, k, save_directory, save_file)
+        Bm25sApplier.search_dataset_query(
+            dataset_path,
+            k,
+            save_directory,
+            save_file
+            )
         print("Next command:\n--moulinette--\n\n")
 
     @staticmethod
