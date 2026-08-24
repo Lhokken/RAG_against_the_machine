@@ -7,10 +7,11 @@ import json
 class CLI():
 
     @staticmethod
-    def index(max_chunk_size: int) -> None:
+    def index(max_chunk_size: int, save_directory: str) -> None:
         """Ingest data/raw/ and build the index under data/processed/.
         """
-        Bm25sApplier.bm25_index_inizialize(max_chunk_size)
+        Bm25sApplier.bm25_index_inizialize(max_chunk_size, save_directory)
+        print("Next command:\n--search_dataset--\n\n")
 
     @staticmethod
     def search(query: str, k: int) -> str:
@@ -31,12 +32,13 @@ class CLI():
     def search_dataset(
             dataset_path: str,
             k: int,
-            save_directory: str
+            save_directory: str,
+            save_file: str = "prova.json"
             ) -> None:
         """Run search over a whole dataset and write a
         StudentSearchResults JSON file.
         """
-        Bm25sApplier.search_dataset_query(dataset_path, k, save_directory)
+        Bm25sApplier.search_dataset_query(dataset_path, k, save_directory, save_file)
         print("Next command:\n--moulinette--\n\n")
 
     @staticmethod
@@ -48,14 +50,16 @@ class CLI():
     @staticmethod
     def answer_dataset(
             student_search_results_path: str,
-            save_directory: str
+            save_directory: str,
+            save_file: str = "final_elaborate.json"
             ) -> None:
         """Generate answers for a dataset, producing
         a StudentSearchResultsAndAnswer JSON file.
         """
         Bm25sApplier.answer_dataset_query(
             student_search_results_path,
-            save_directory
+            save_directory,
+            save_file
             )
 
     @staticmethod

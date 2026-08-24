@@ -19,7 +19,7 @@ class Bm25sApplier():
     retriever: bm25s.BM25
 
     @classmethod
-    def tokenizer(cls, chunk_list: list[Document]) -> None:
+    def tokenizer(cls, chunk_list: list[Document], save_directory: str = "data/processed") -> None:
         """This method create the corpus based on a list of given text chunks
 
         It save the result in the ricght directory and return an error message
@@ -37,26 +37,26 @@ class Bm25sApplier():
             cls.retriever = bm25s.BM25(k1=1.5, b=0.75)
             cls.retriever.index(corpus_tokens)
             cls.retriever.save(
-                "./data/processed/Index_bm25s", corpus=corpus_saved
+                save_directory, corpus=corpus_saved
                 )
             print("Ingestion complete! Indices saved under data/processed/")
         except (ValidationError, Exception) as e:
             print(f"Error while index cration: {e}")
 
     @classmethod
-    def bm25_index_inizialize(cls, k: int = 2000) -> None:
+    def bm25_index_inizialize(cls, k: int = 2000, save_directory: str = "data/processed") -> None:
         """This method create the index
 
         It search the full database, split all documents
         with the right function for each document type
         and save the result
         """
-        if os.path.exists("./data/processed/Index_bm25s"):
+        if os.path.exists("data/processed"):
             print("---\nIndex already exist! Ultrafast loading.\n---")
         else:
-            Bm25sApplier.tokenizer(Searcher.analizer(k))
+            Bm25sApplier.tokenizer(Searcher.analizer(k), save_directory)
         cls.retriever = bm25s.BM25.load(
-            "./data/processed/Index_bm25s", load_corpus=True
+            "data/processed", load_corpus=True
             )
 
     @classmethod
@@ -67,7 +67,6 @@ class Bm25sApplier():
         a list of dictionaries with the most significant data based on the
         given query.
         """
-        # cls.bm25_index_inizialize()
         query_tokens = bm25s.tokenize([query])
         if cls.retriever.corpus is None:
             raise ValueError("Corpus not loaded or created. Verify.")
@@ -95,8 +94,14 @@ class Bm25sApplier():
             cls,
             dataset_path: str,
             k: int,
-            save_directory: str
+            save_directory: str,
+            save_file: str
             ) -> None:
+        """This method search corpus about a list of question
+
+        First apply search_single_query to each question of the list.
+        Then save result in a file in the given directory.
+        """
         print("Elaborating query ...\n")
         result = []
         cls.bm25_index_inizialize()
@@ -114,7 +119,7 @@ class Bm25sApplier():
             os.makedirs(save_directory, exist_ok=True)
             dict_result = {"search_results": result, "k": k}
             with open(
-                    f"{save_directory}/dataset_docs_public.json", "w"
+                    f"{save_directory}/{save_file}", "w"
                     ) as file_output:
                 json.dump(dict_result, file_output, indent=2)
             print("---\nStudentSearchResults JSON file saved in:\n"
@@ -122,7 +127,11 @@ class Bm25sApplier():
 
     @classmethod
     def answer_single_query(cls, query: str, k: int) -> None:
-        # Bm25sApplier.bm25_index_inizialize()
+        """This method coordinate two methods
+
+        First search_single_query to obtain the right data to analize,
+        then call single_query with question and data.
+        """
         context: str = ""
         try:
             if k <= 0:
@@ -130,7 +139,6 @@ class Bm25sApplier():
             else:
                 data_list = cls.search_single_query(query, k)
                 context = json.dumps(data_list, indent=2)
-                # context = Searcher.extractor(data_list[0])
         except IndexError as e:
             print(f"Parameter k must be >0: {e}")
             exit()
@@ -138,6 +146,11 @@ class Bm25sApplier():
 
     @classmethod
     def single_query(cls, query: str, context: str) -> str:
+        """This method use qwen to answer a single question
+
+        After buildind the prompt with query and context, decide to use
+        cuda or cpu, activate the llm model qwen and finally return the result.
+        """
         chat = f"""<|im_start|>system
 Output ONLY the factual answer.
 Start your response immediately with the requested information.
@@ -160,7 +173,6 @@ Start your response immediately with the requested information.
             task="text-generation",
             model="Qwen/Qwen3-0.6B",
             dtype=torch.bfloat16,
-            # device_map="auto",
             device=dev_type
             )
         blocked_ids: list[list[int] | Any] = []
@@ -193,7 +205,13 @@ Start your response immediately with the requested information.
             cls,
             student_search_results_path: str,
             save_directory: str,
+            save_file: str
             ) -> None:
+        """This method apply single_query to each question.
+
+        After obtaining result from single_query, it append the result
+        to answer_list.
+        """
         transformers.logging.set_verbosity_error()
         with open(student_search_results_path, encoding="utf-8") as source:
             question_list = json.load(source)["search_results"]
@@ -229,7 +247,7 @@ Start your response immediately with the requested information.
                       "k": len(question_list[0]["retrieved_sources"])}
         os.makedirs(save_directory, exist_ok=True)
         with open(
-                f"{save_directory}/dataset_docs_public.json", "w"
+                f"{save_directory}/{save_file}", "w"
                 ) as file_output:
             json.dump(final_list, file_output, indent=2)
 

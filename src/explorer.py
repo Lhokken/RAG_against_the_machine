@@ -12,6 +12,8 @@ from pprint import pprint
 
 
 class Searcher():
+    """This class contains methods for database chunking
+    """
     root_directory: str = "./data/raw/vllm-0.10.1"
     file_list: list[str] = []
     chunk_list: list[(Document)] = []
@@ -20,6 +22,8 @@ class Searcher():
 
     @classmethod
     def analizer(cls, new_max_chunk_size: int) -> list[Document]:
+        """This method collect other methods of this class
+        """
         if new_max_chunk_size < 2000:
             cls.max_chunk_size = new_max_chunk_size
         cls.search_all()
@@ -28,6 +32,10 @@ class Searcher():
 
     @classmethod
     def search_all(cls) -> None:
+        """This method create the list of files
+
+        and relatives filepath
+        """
         try:
             for root, _, files in os.walk(cls.root_directory):
                 for file in files:
@@ -39,10 +47,17 @@ class Searcher():
 
     @classmethod
     def print_file_list(cls) -> None:
+        """Simple print method"""
         pprint(cls.file_list)
 
     @classmethod
     def split_all(cls, file_list: list[str]) -> None:
+        """Main method of this class
+
+        This method apply the right splitter function for file types:
+        text, html, and .py.
+        Then create file chunks.
+        """
         html_pattern = r'</?(h[1-6]|p|div|span|br|table)[^>]*>'
         txt_chunker = RecursiveCharacterTextSplitter(
             chunk_size=cls.max_chunk_size,
@@ -54,7 +69,9 @@ class Searcher():
             headers_to_split_on=[
                 ("#", "Title_1_H1"),
                 ("##", "Title_2_H2"),
-                ("###", "Title_3_H3")])
+                ("###", "Title_3_H3")
+            ]
+        )
         html_chunker = HTMLHeaderTextSplitter(
             headers_to_split_on=[
                 ("h1", "Title_1_H1"),
@@ -62,7 +79,10 @@ class Searcher():
                 ("h3", "Title_3_H3")
             ]
         )
-        py_chunker = PythonCodeTextSplitter()
+        py_chunker = PythonCodeTextSplitter(
+            chunk_size=cls.max_chunk_size,
+            chunk_overlap=150
+        )
         temp: list[Document]
         for file in file_list:
             try:
@@ -90,10 +110,9 @@ class Searcher():
 
                     elif file.lower().endswith(".py"):
                         temp = py_chunker.create_documents(
-                            texts=[source.read()],
+                            texts=[text_content],
                             metadatas=[{"source": file}]
                             )
-                        temp = txt_chunker.split_documents(temp)
 
                     if temp != []:
                         for doc in temp:
@@ -129,6 +148,8 @@ class Searcher():
                 print(f"Error in elaborating file {file}: {e}")
 
     def print_chunk_list(self) -> None:
+        """Debugging function, used for test control
+        """
         for string in self.chunk_list:
             print("-" * 50)
             pprint(string)
@@ -136,6 +157,8 @@ class Searcher():
 
     @classmethod
     def extractor(cls, data_file: dict[str, str]) -> str:
+        """This method is used to extract chunk from the corpus
+        """
         with open(data_file["file_path"],  encoding="utf-8") as source:
             text_content = source.read()
         start = int(data_file["first_character_index"])

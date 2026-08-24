@@ -28,29 +28,6 @@ evaluate:
 debug:
 	$(UV) run python -m pdb src
 
-
-index:
-	$(UV) run python -m src index --max_chunk_size 2000
-
-search_dataset:
-	$(UV) run python -m src search_dataset \
-	--dataset_path data/datasets/UnansweredQuestions/dataset_docs_public.json \
-	--k 6 \
-	--save_directory data/output/search_results/UnansweredQuestions
-
-moulinette:
-	./moulinette evaluate_student_search_results \
-	data/output/search_results/UnansweredQuestions/dataset_docs_public.json \
-	data/datasets/AnsweredQuestions/dataset_docs_public.json \
-	--k 10 --max_context_length 2000
-	$(UV) run python -m src moulinette
-
-answer_dataset:
-	$(UV) run python -m src answer_dataset \
-	--student_search_results_path data/output/search_results/UnansweredQuestions/dataset_docs_public.json \
-	--save_directory data/output/search_results_and_answer/UnansweredQuestions
-
-
 # Run pdb in a shell
 # 	Command		Short	What it does
 # 	next		n		Execute next line (don't step into calls)
@@ -61,14 +38,46 @@ answer_dataset:
 # 	where		w		Print call stack
 # 	up / down	u / d	Move up/down the call stack
 # 	return		r		Run until current function returns
-	
+
+DATA	= DOCS # DOCS or CODE
+DOCS	= dataset_docs_public.json
+CODE	= dataset_code_public.json
+FILE	= elaborated.json
+FINAL	= final_elaborate.json
+
+index:
+	$(UV) run python -m src index \
+	--max_chunk_size 2000 \
+	--save_directory data/processed
+
+search_dataset:
+	$(UV) run python -m src search_dataset \
+	--dataset_path data/datasets/UnansweredQuestions/$(DATA) \
+	--k 6 \
+	--save_directory data/output/search_results/UnansweredQuestions \
+	--save_file $(FILE)
+
+moulinette:
+	./moulinette evaluate_student_search_results \
+	data/output/search_results/UnansweredQuestions/elaborated.json \
+	data/datasets/AnsweredQuestions/$(DATA) \
+	--k 10 --max_context_length 2000
+	$(UV) run python -m src moulinette
+
+answer_dataset:
+	$(UV) run python -m src answer_dataset \
+	--student_search_results_path data/output/search_results/UnansweredQuestions/elaborated.json \
+	--save_directory data/output/search_results_and_answer/UnansweredQuestions \
+	--save_file $(FINAL)
+
+
 clean:
-	rm -rf data/processed/Index_bm25s
+	rm -rf data/processed
 	rm -rf data/output
 
 fclean:
 	rm -rf .venv
-	rm -rf data/processed/Index_bm25s
+	rm -rf data/processed
 	rm -rf data/output
 
 re: clean install
