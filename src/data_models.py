@@ -42,3 +42,16 @@ class StudentSearchResults(BaseModel):
 class StudentSearchResultsAndAnswer(BaseModel):
     search_results: list[MinimalAnswer]
     k: int
+
+
+class MinimalRagData(BaseModel):
+    question_id: str
+    question: str
+    answer: str
+    sources: list[MinimalSource]
+    difficulty: str
+    is_valid: bool
+
+
+class RagDataGround(BaseModel):
+    rag_questions: list[MinimalRagData]

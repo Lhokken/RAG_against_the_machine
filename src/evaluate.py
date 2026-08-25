@@ -1,42 +1,35 @@
 #!/usr/bin/env python3
 
 import json
+from src.data_models import StudentSearchResults, RagDataGround
+
+def dict_student(
+        student_search_results_path: str
+        ) -> StudentSearchResults:
+    with open(student_search_results_path, encoding="utf-8") as source:
+        result = StudentSearchResults.model_validate(json.load(source))
+    result.search_results[0].question
+    return result
+
+def dict_dataset(dataset_path: str) -> RagDataGround:
+    with open(dataset_path, encoding="utf-8") as source:
+        ground_truth = RagDataGround.model_validate(json.load(source))
+    return ground_truth
 
 def evaluation_step(
         student_search_results_path: str,
         dataset_path: str,
         k: int) -> None:
-    with open(student_search_results_path, encoding="utf-8") as source:
-        text_content = json.load(source)
-        result = []
-        for elem in (text_content["search_results"]):
-            text_1 = {}
-            list_1 = []
-            for elem2 in elem["retrieved_sources"]:
-                list_1.append(elem2)
-            text_1.update({
-                "question_id": f"{elem['question_id']}",
-                "retrieved_sources": list_1,
-            })
-            result.append((text_1))
-
-    # print(json.dumps(result, indent=2))
-    # for elem in result:
-    #     for elem1 in elem["retrieved_sources"]:
-    #         print(elem1["last_character_index"])
-
-    with open(dataset_path, encoding="utf-8") as source:
-        text_content = json.load(source)
-        ground_truth = []
-        for elem in (text_content["rag_questions"]):
-            text_1 = {}
-            text_1.update({
-                "question_id": f"{elem['question_id']}",
-                "sources": elem["sources"],
-            })
-            ground_truth.append((text_1))
-
-    print(json.dumps(ground_truth, indent=2))
-    for elem in ground_truth:
-        for elem1 in elem["sources"]:
-            print(elem1["last_character_index"])
+    result = dict_student(student_search_results_path)
+    ground_truth = dict_dataset(dataset_path)
+    ground_truth.rag_questions[0]
+    for elab in result.search_results:
+        i = 0
+        id_elab = (elab.question_id)
+        while (i < len(ground_truth.rag_questions)):
+            if ground_truth.rag_questions[i].question_id == id_elab:
+                for source in elab.retrieved_sources:
+                    if source.file_path == ground_truth.rag_questions[i].sources[0].file_path:
+                        print(source.file_path)
+                break
+            i += 1
