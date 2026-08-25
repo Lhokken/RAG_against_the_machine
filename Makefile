@@ -22,9 +22,6 @@ search:
 answer:
 	$(UV) run python -m src answer "What activation formats does the fused batched MoE layer return in vLLM?" 1
 
-evaluate:
-	$(UV) run python -m src answer_dataset "./data/datasets/AnsweredQuestions" "./data/raw/vllm-0.10.1"
-
 debug:
 	$(UV) run python -m pdb src
 
@@ -39,7 +36,7 @@ debug:
 # 	up / down	u / d	Move up/down the call stack
 # 	return		r		Run until current function returns
 
-DATA	= DOCS # DOCS or CODE
+DATA	= $(CODE) # DOCS or CODE
 DOCS	= dataset_docs_public.json
 CODE	= dataset_code_public.json
 FILE	= elaborated.json
@@ -53,23 +50,27 @@ index:
 search_dataset:
 	$(UV) run python -m src search_dataset \
 	--dataset_path data/datasets/UnansweredQuestions/$(DATA) \
-	--k 6 \
+	--k 10 \
 	--save_directory data/output/search_results/UnansweredQuestions \
 	--save_file $(FILE)
 
 moulinette:
 	./moulinette evaluate_student_search_results \
-	data/output/search_results/UnansweredQuestions/elaborated.json \
+	data/output/search_results/UnansweredQuestions/$(FILE) \
 	data/datasets/AnsweredQuestions/$(DATA) \
 	--k 10 --max_context_length 2000
 	$(UV) run python -m src moulinette
 
 answer_dataset:
 	$(UV) run python -m src answer_dataset \
-	--student_search_results_path data/output/search_results/UnansweredQuestions/elaborated.json \
+	--student_search_results_path data/output/search_results/UnansweredQuestions/$(FILE) \
 	--save_directory data/output/search_results_and_answer/UnansweredQuestions \
 	--save_file $(FINAL)
 
+evaluate:
+	$(UV) run python -m src evaluate \
+	--student_search_results_path data/output/search_results/UnansweredQuestions/$(FILE) \
+	--dataset_path data/datasets/AnsweredQuestions/$(DATA)
 
 clean:
 	rm -rf data/processed

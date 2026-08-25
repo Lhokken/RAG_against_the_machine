@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from src.bm25_applier import Bm25sApplier
+from src.evaluate import evaluation_step
 import json
 
 
@@ -74,7 +75,7 @@ class CLI():
         """Report your own recall@k against
 
         a ground-truth dataset, for your own testing."""
-        pass
+        evaluation_step(student_search_results_path, dataset_path)
 
     @staticmethod
     def moulinette() -> None:

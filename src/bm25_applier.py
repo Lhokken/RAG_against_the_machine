@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
 import os
-from pydantic import ValidationError
-from typing import Any
 import bm25s
-from tqdm import tqdm
-from langchain_core.documents import Document
 import torch
 import transformers
+import json
+from pydantic import ValidationError
+from typing import Any
+from tqdm import tqdm
+from langchain_core.documents import Document
 from transformers import pipeline
 from src.explorer import Searcher
-import json
-# from src import data_models as dm
 
 
 class Bm25sApplier():
@@ -44,8 +43,9 @@ class Bm25sApplier():
                 save_directory, corpus=corpus_saved
                 )
             print("Ingestion complete! Indices saved under data/processed/")
-        except (ValidationError, Exception) as e:
-            print(f"Error while index cration: {e}")
+        except (ValidationError, RuntimeWarning, Exception) as e:
+            print(f"Error while index creation: {e}\n")
+            exit()
 
     @classmethod
     def bm25_index_inizialize(
@@ -63,9 +63,13 @@ class Bm25sApplier():
             print("---\nIndex already exist! Ultrafast loading.\n---")
         else:
             Bm25sApplier.tokenizer(Searcher.analizer(k), save_directory)
-        cls.retriever = bm25s.BM25.load(
-            "data/processed", load_corpus=True
-            )
+        try:
+            cls.retriever = bm25s.BM25.load(
+                "data/processed", load_corpus=True
+                )
+        except (ValidationError, FileNotFoundError) as e:
+            print(f"Loading error: {e}\nVerify and retry.\n")
+            exit()
 
     @classmethod
     def search_single_query(cls, query: str, n: int) -> list[dict[str, str]]:
@@ -113,25 +117,31 @@ class Bm25sApplier():
         print("Elaborating query ...\n")
         result = []
         cls.bm25_index_inizialize()
-        with open(dataset_path, encoding="utf-8") as source:
-            text_content = json.load(source)
-            for elem in tqdm(text_content["rag_questions"]):
-                text_1 = {}
-                text_2 = cls.search_single_query(elem["question"], k)
-                text_1.update({
-                    "question_id": f"{elem['question_id']}",
-                    "question": f"{elem['question']}",
-                    "retrieved_sources": text_2
-                })
-                result.append((text_1))
-            os.makedirs(save_directory, exist_ok=True)
-            dict_result = {"search_results": result, "k": k}
-            with open(
-                    f"{save_directory}/{save_file}", "w"
-                    ) as file_output:
-                json.dump(dict_result, file_output, indent=2)
-            print("---\nStudentSearchResults JSON file saved in:\n"
-                  f"{save_directory}\n---\n")
+        try:
+            with open(dataset_path, encoding="utf-8") as source:
+                text_content = json.load(source)
+                for elem in tqdm(text_content["rag_questions"]):
+                    text_1 = {}
+                    text_2 = cls.search_single_query(elem["question"], k)
+                    text_1.update({
+                        "question_id": f"{elem['question_id']}",
+                        "question": f"{elem['question']}",
+                        "retrieved_sources": text_2
+                    })
+                    result.append((text_1))
+                os.makedirs(save_directory, exist_ok=True)
+                dict_result = {"search_results": result, "k": k}
+                with open(
+                        f"{save_directory}/{save_file}", "w"
+                        ) as file_output:
+                    json.dump(dict_result, file_output, indent=2)
+                print(
+                    "---\nStudentSearchResults JSON file saved in:\n"
+                    f"{save_directory}\n---\n"
+                    )
+        except (ValidationError, FileNotFoundError) as e:
+            print(e)
+            exit()
 
     @classmethod
     def answer_single_query(cls, query: str, k: int) -> None:
@@ -221,8 +231,13 @@ Start your response immediately with the requested information.
         to answer_list.
         """
         transformers.logging.set_verbosity_error()
-        with open(student_search_results_path, encoding="utf-8") as source:
-            question_list = json.load(source)["search_results"]
+        question_list = []
+        try:
+            with open(student_search_results_path, encoding="utf-8") as source:
+                question_list = json.load(source)["search_results"]
+        except (ValidationError, FileNotFoundError) as e:
+            print(e)
+            exit()
         answer_list = []
         n_result: dict[str, str] = {}
         cls.bm25_index_inizialize()

@@ -2,12 +2,12 @@
 
 import os
 import re
-from pydantic import ValidationError
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_text_splitters import MarkdownHeaderTextSplitter
 from langchain_text_splitters import HTMLHeaderTextSplitter
 from langchain_text_splitters import PythonCodeTextSplitter
 from langchain_core.documents import Document
+from pydantic import ValidationError
 from pprint import pprint
 
 
@@ -24,10 +24,16 @@ class Searcher():
     def analizer(cls, new_max_chunk_size: int) -> list[Document]:
         """This method collect other methods of this class
         """
-        if new_max_chunk_size < 2000:
-            cls.max_chunk_size = new_max_chunk_size
-        cls.search_all()
-        cls.split_all(cls.file_list)
+        try:
+            if new_max_chunk_size < 2000:
+                cls.max_chunk_size = new_max_chunk_size
+            cls.search_all()
+            cls.split_all(cls.file_list)
+            if len(cls.file_list) == 0:
+                raise FileNotFoundError("\nAbsent data, file not found.\n")
+        except (ValidationError, FileNotFoundError) as e:
+            print(e)
+            exit()
         return cls.chunk_list
 
     @classmethod
@@ -42,8 +48,9 @@ class Searcher():
                     if file.lower().endswith(cls.valid_extensions):
                         file_path = os.path.join(root, file)
                         cls.file_list.append(file_path)
-        except (ValidationError, Exception) as e:
+        except (ValidationError, RuntimeWarning, Exception) as e:
             print(e)
+            exit()
 
     @classmethod
     def print_file_list(cls) -> None:
