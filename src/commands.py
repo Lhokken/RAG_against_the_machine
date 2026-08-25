@@ -70,12 +70,14 @@ class CLI():
 
     @staticmethod
     def evaluate(
-            student_search_results_path: str, dataset_path: str
+            student_search_results_path: str,
+            dataset_path: str,
+            k: int
             ) -> None:
         """Report your own recall@k against
 
         a ground-truth dataset, for your own testing."""
-        evaluation_step(student_search_results_path, dataset_path)
+        evaluation_step(student_search_results_path, dataset_path, k)
 
     @staticmethod
     def moulinette() -> None:

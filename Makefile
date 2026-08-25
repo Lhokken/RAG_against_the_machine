@@ -70,7 +70,8 @@ answer_dataset:
 evaluate:
 	$(UV) run python -m src evaluate \
 	--student_search_results_path data/output/search_results/UnansweredQuestions/$(FILE) \
-	--dataset_path data/datasets/AnsweredQuestions/$(DATA)
+	--dataset_path data/datasets/AnsweredQuestions/$(DATA) \
+	--k 3
 
 clean:
 	rm -rf data/processed

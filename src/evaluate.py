@@ -2,14 +2,17 @@
 
 import json
 
-def evaluation_step(student_search_results_path: str, dataset_path: str) -> None:
+def evaluation_step(
+        student_search_results_path: str,
+        dataset_path: str,
+        k: int) -> None:
     with open(student_search_results_path, encoding="utf-8") as source:
         text_content = json.load(source)
         result = []
         for elem in (text_content["search_results"]):
             text_1 = {}
             list_1 = []
-            for elem2 in elem['retrieved_sources']:
+            for elem2 in elem["retrieved_sources"]:
                 list_1.append(elem2)
             text_1.update({
                 "question_id": f"{elem['question_id']}",
@@ -23,17 +26,17 @@ def evaluation_step(student_search_results_path: str, dataset_path: str) -> None
     #         print(elem1["last_character_index"])
 
     with open(dataset_path, encoding="utf-8") as source:
-        text_content2 = json.load(source)
-        ground = []
-        for elem in (text_content2["rag_questions"]):
+        text_content = json.load(source)
+        ground_truth = []
+        for elem in (text_content["rag_questions"]):
             text_1 = {}
             text_1.update({
                 "question_id": f"{elem['question_id']}",
-                "sources": elem['sources'],
+                "sources": elem["sources"],
             })
-            ground.append((text_1))
+            ground_truth.append((text_1))
 
-    print(json.dumps(ground, indent=2))
-    for elem in ground:
+    print(json.dumps(ground_truth, indent=2))
+    for elem in ground_truth:
         for elem1 in elem["sources"]:
             print(elem1["last_character_index"])
