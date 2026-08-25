@@ -36,7 +36,7 @@ debug:
 # 	up / down	u / d	Move up/down the call stack
 # 	return		r		Run until current function returns
 
-DATA	= $(CODE) # DOCS or CODE
+DATA	= $(DOCS) # DOCS or CODE
 DOCS	= dataset_docs_public.json
 CODE	= dataset_code_public.json
 FILE	= elaborated.json
