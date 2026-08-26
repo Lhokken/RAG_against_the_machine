@@ -269,10 +269,14 @@ Start your response immediately with the requested information.
         final_list = {"search_results": answer_list,
                       "k": len(question_list[0]["retrieved_sources"])}
         os.makedirs(save_directory, exist_ok=True)
-        with open(
-                f"{save_directory}/{save_file}", "w"
-                ) as file_output:
-            json.dump(final_list, file_output, indent=2)
+        try:
+            with open(
+                    f"{save_directory}/{save_file}", "w"
+                    ) as file_output:
+                json.dump(final_list, file_output, indent=2)
+        except FileNotFoundError as e:
+            print(e)
+            exit()
 
         print(
             f"\nLoaded 100 questions ... Processed {counter} "

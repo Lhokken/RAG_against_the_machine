@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-import re
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_text_splitters import MarkdownHeaderTextSplitter
-from langchain_text_splitters import HTMLHeaderTextSplitter
 from langchain_text_splitters import PythonCodeTextSplitter
 from langchain_core.documents import Document
 from pydantic import ValidationError
@@ -19,6 +16,7 @@ class Searcher():
     chunk_list: list[(Document)] = []
     valid_extensions: tuple[str, str, str] = (".py", ".txt", ".md")
     max_chunk_size = 2000
+    overlap = (max_chunk_size * 15 // 100)
 
     @classmethod
     def analizer(cls, new_max_chunk_size: int) -> list[Document]:
@@ -27,6 +25,7 @@ class Searcher():
         try:
             if new_max_chunk_size < 2000:
                 cls.max_chunk_size = new_max_chunk_size
+                cls.overlap = (cls.max_chunk_size * 15 // 100)
             cls.search_all()
             cls.split_all(cls.file_list)
             if len(cls.file_list) == 0:
@@ -65,30 +64,30 @@ class Searcher():
         text, html, and .py.
         Then create file chunks.
         """
-        html_pattern = r'</?(h[1-6]|p|div|span|br|table)[^>]*>'
+        # html_pattern = r'</?(h[1-6]|p|div|span|br|table)[^>]*>'
         txt_chunker = RecursiveCharacterTextSplitter(
             chunk_size=cls.max_chunk_size,
-            chunk_overlap=150,
+            chunk_overlap=cls.overlap,
             add_start_index=True,
             length_function=len
             )
-        md_chunker = MarkdownHeaderTextSplitter(
-            headers_to_split_on=[
-                ("#", "Title_1_H1"),
-                ("##", "Title_2_H2"),
-                ("###", "Title_3_H3")
-            ]
-        )
-        html_chunker = HTMLHeaderTextSplitter(
-            headers_to_split_on=[
-                ("h1", "Title_1_H1"),
-                ("h2", "Title_2_H2"),
-                ("h3", "Title_3_H3")
-            ]
-        )
+        # md_chunker = MarkdownHeaderTextSplitter(
+        #     headers_to_split_on=[
+        #         ("#", "Title_1_H1"),
+        #         ("##", "Title_2_H2"),
+        #         ("###", "Title_3_H3")
+        #     ]
+        # )
+        # html_chunker = HTMLHeaderTextSplitter(
+        #     headers_to_split_on=[
+        #         ("h1", "Title_1_H1"),
+        #         ("h2", "Title_2_H2"),
+        #         ("h3", "Title_3_H3")
+        #     ]
+        # )
         py_chunker = PythonCodeTextSplitter(
             chunk_size=cls.max_chunk_size,
-            chunk_overlap=150
+            chunk_overlap=cls.overlap
         )
         temp: list[Document]
         for file in file_list:
@@ -97,23 +96,24 @@ class Searcher():
                 search_start = 0
                 with open(file, encoding="utf-8") as source:
                     text_content = source.read()
-                    if file.lower().endswith(".txt"):
+                    if file.lower().endswith(".txt") \
+                            or file.lower().endswith(".md"):
                         text = Document(
                             page_content=text_content,
                             metadata={"source": file}
                             )
                         temp = txt_chunker.split_documents([text])
 
-                    elif file.lower().endswith(".md"):
-                        if re.search(
-                                html_pattern, text_content, re.IGNORECASE
-                                ):
-                            temp = html_chunker.split_text(text_content)
-                        else:
-                            temp = md_chunker.split_text(text_content)
-                        for doc in temp:
-                            doc.metadata["source"] = file
-                        temp = txt_chunker.split_documents(temp)
+                    # elif file.lower().endswith(".md"):
+                        # if re.search(
+                        #         html_pattern, text_content, re.IGNORECASE
+                        #         ):
+                        #     temp = html_chunker.split_text(text_content)
+                        # else:
+                        # temp = md_chunker.split_text(text_content)
+                        # for doc in temp:
+                        #     doc.metadata["source"] = file
+                        # temp = txt_chunker.split_documents(temp)
 
                     elif file.lower().endswith(".py"):
                         temp = py_chunker.create_documents(
@@ -153,6 +153,7 @@ class Searcher():
                 Exception
             ) as e:
                 print(f"Error in elaborating file {file}: {e}")
+                exit()
 
     def print_chunk_list(self) -> None:
         """Debugging function, used for test control
@@ -166,8 +167,12 @@ class Searcher():
     def extractor(cls, data_file: dict[str, str]) -> str:
         """This method is used to extract chunk from the corpus
         """
-        with open(data_file["file_path"],  encoding="utf-8") as source:
-            text_content = source.read()
+        try:
+            with open(data_file["file_path"],  encoding="utf-8") as source:
+                text_content = source.read()
+        except FileNotFoundError as e:
+            print(e)
+            exit()
         start = int(data_file["first_character_index"])
         end = int(data_file["last_character_index"])
         return text_content[start:end]

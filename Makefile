@@ -36,9 +36,9 @@ debug:
 # 	up / down	u / d	Move up/down the call stack
 # 	return		r		Run until current function returns
 
-DATA	= $(DOCS) # DOCS or CODE
 DOCS	= dataset_docs_public.json
 CODE	= dataset_code_public.json
+DATA	= $(DOCS) # DOCS or CODE
 FILE	= elaborated.json
 FINAL	= final_elaborate.json
 
@@ -71,7 +71,7 @@ evaluate:
 	$(UV) run python -m src evaluate \
 	--student_search_results_path data/output/search_results/UnansweredQuestions/$(FILE) \
 	--dataset_path data/datasets/AnsweredQuestions/$(DATA) \
-	--k 3
+	--k 10
 
 clean:
 	rm -rf data/processed
