@@ -54,7 +54,7 @@ class StudentSearchResultsAndAnswer(BaseModel):
 
 class MinimalRagData(BaseModel):
     """Class used to create a complete dataset
-    
+
     with question, answer, chunks and other relevant data"""
     question_id: str
     question: str

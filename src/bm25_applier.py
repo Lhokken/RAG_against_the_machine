@@ -264,8 +264,7 @@ Start your response immediately with the requested information.
                 "answer": answer
             }
             answer_list.append(n_result)
-            # if counter == 10:
-            #     break
+
         final_list = {"search_results": answer_list,
                       "k": len(question_list[0]["retrieved_sources"])}
         os.makedirs(save_directory, exist_ok=True)

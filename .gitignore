@@ -2,6 +2,7 @@ __pycache__/
 datasets_public/
 llm_sdk/
 vllm-0.10.1/
+data/
 
 uv.lock
 moulinette.zip

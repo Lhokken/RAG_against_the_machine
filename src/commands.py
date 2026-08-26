@@ -12,7 +12,7 @@ class CLI():
         """Ingest data/raw/ and build the index under data/processed/.
         """
         Bm25sApplier.bm25_index_inizialize(max_chunk_size, save_directory)
-        print("Next command:\n--search_dataset--\n\n")
+        print("Next command:\n--make search_dataset--\n\n")
 
     @staticmethod
     def search(query: str, k: int) -> str:
@@ -45,7 +45,7 @@ class CLI():
             save_directory,
             save_file
             )
-        print("Next command:\n--moulinette--\n\n")
+        print("Next command:\n--make moulinette--\n\n")
 
     @staticmethod
     def answer(query: str, k: int) -> None:
@@ -67,6 +67,7 @@ class CLI():
             save_directory,
             save_file
             )
+        print("Next command:\n--make evaluate--\n\n")
 
     @staticmethod
     def evaluate(
@@ -81,4 +82,4 @@ class CLI():
 
     @staticmethod
     def moulinette() -> None:
-        print("Next command:\n--answer_dataset--\n\n")
+        print("Next command:\n--make answer_dataset--\n\n")
