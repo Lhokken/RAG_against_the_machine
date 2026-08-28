@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from typing import Any
 from tqdm import tqdm
 from langchain_core.documents import Document
-from transformers import pipeline
+from transformers import pipeline, logging
 from src.explorer import Searcher
 
 
@@ -150,6 +150,7 @@ class Bm25sApplier():
         First search_single_query to obtain the right data to analize,
         then call single_query with question and data.
         """
+        cls.bm25_index_inizialize()
         context: str = ""
         try:
             if k <= 0:
@@ -160,7 +161,7 @@ class Bm25sApplier():
         except IndexError as e:
             print(f"Parameter k must be >0: {e}")
             exit()
-        cls.single_query(query, context)
+        print("\n", cls.single_query(query, context))
 
     @classmethod
     def single_query(cls, query: str, context: str) -> str:
@@ -187,6 +188,7 @@ Start your response immediately with the requested information.
             f"Context lenght: {len(context)}\n"
             f"Device used: {dev_type}\n"
             )
+        logging.set_verbosity_error()
         llm = pipeline(
             task="text-generation",
             model="Qwen/Qwen3-0.6B",
