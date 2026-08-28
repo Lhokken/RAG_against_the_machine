@@ -67,3 +67,18 @@ class MinimalRagData(BaseModel):
 class RagDataGround(BaseModel):
     """Class used to contain MinimalRagData"""
     rag_questions: list[MinimalRagData]
+
+
+class EvaluateRequest(BaseModel):
+    """Class for API filter"""
+    student_search_results_path: str
+    dataset_path: str
+    k: int
+
+
+class EvaluateOutput(BaseModel):
+    """Class for API input"""
+    is_valid: bool
+    total_student_questions: int
+    total_ground_truth_questions: int
+    recall_results: list[str]

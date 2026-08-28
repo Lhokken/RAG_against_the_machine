@@ -81,7 +81,7 @@ class Bm25sApplier():
         """
         query_tokens = bm25s.tokenize([query])
         if cls.retriever.corpus is None:
-            raise ValueError("Corpus not loaded or created. Verify.")
+            raise Exception("Corpus not loaded or created. Verify.")
         result, scores = cls.retriever.retrieve(
             query_tokens, corpus=cls.retriever.corpus, k=n
             )

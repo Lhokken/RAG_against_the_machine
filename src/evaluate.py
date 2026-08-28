@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
 import json
-from src.data_models import StudentSearchResults, RagDataGround
+from src.data_models import StudentSearchResults, \
+    RagDataGround, EvaluateOutput, EvaluateRequest
+from fastapi import FastAPI
+
+
+app = FastAPI()
 
 
 def dict_student(student_search_results_path: str) -> StudentSearchResults:
@@ -27,22 +32,20 @@ def dict_dataset(dataset_path: str) -> RagDataGround:
     return ground_truth
 
 
-def evaluation_step(
-        student_search_results_path: str,
-        dataset_path: str,
-        k: int) -> None:
+@app.post("/local_path")  # type: ignore[untyped-decorator]
+def evaluation_step(data_output: EvaluateRequest) -> EvaluateOutput:
     """This function build the recall@k result
 
     In order to obtain the result, launche k times the
     single evaluate function"""
-    result = dict_student(student_search_results_path)
-    ground_truth = dict_dataset(dataset_path)
+    result = dict_student(data_output.student_search_results_path)
+    ground_truth = dict_dataset(data_output.dataset_path)
     n: int = 0
     i: int = 0
     j: int = 0
     IoU: float = 0
     eval_result: list[list[str | float]] = []
-    while (j < k):
+    while (j < data_output.k):
         j = j + 1
         n = 0
         for elab in result.search_results:
@@ -75,15 +78,27 @@ def evaluation_step(
                 i += 1
         rec = (n / len(result.search_results))
         eval_result.append([f"Recall@{j}: {rec:.3f}", (rec * 100)])
-    print(
+    rek = ""
+    rekall: list[str] = []
+    for text in eval_result:
+        rek += (f"{text[0]} ({text[1]:.1f}%)\n")
+        rekall.append(f"{text[0]} ({text[1]:.1f}%)")
+    output = EvaluateOutput.model_validate({
+        "is_valid": True,
+        "total_student_questions": len(result.search_results),
+        "total_ground_truth_questions": len(ground_truth.rag_questions),
+        "recall_results": rekall
+    })
+    output_str = (
         f"\nStudent data is valid: True\n"
         f"Total number of questions: {len(result.search_results)}\n"
-        "Total number of questions with sources: "
+        f"Total number of questions with sources: "
         f"{len(ground_truth.rag_questions)}\n\n"
-        "Evaluation results"
+        "Evaluation results\n"
         "======================================\n"
-        f"Questions evaluated: {i}\n"
+        f"Questions evaluated: {i}\n\n"
+        f"{rek}"
         )
-    for text in eval_result:
-        print(f"{text[0]} ({text[1]:.1f}%)")
+    print(output_str)
     print()
+    return output

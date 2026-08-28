@@ -2,7 +2,8 @@
 
 .PHONY: all install run search answer evaluate debug \
 	lint lint-strict clean fclean re \
-	index search_dataset moulinette answer_dataset
+	index search_dataset moulinette answer_dataset \
+	fastapi
 
 UV      = uv
 PYTHON  = .venv/bin/python
@@ -73,6 +74,10 @@ evaluate:
 	--student_search_results_path data/output/search_results/UnansweredQuestions/$(FILE) \
 	--dataset_path data/datasets/AnsweredQuestions/$(DATA) \
 	--k $(K)
+
+fastapi:
+	$(UV) run fastapi dev --entrypoint src.evaluate:app
+
 
 clean:
 	rm -rf data/processed
