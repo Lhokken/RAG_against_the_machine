@@ -42,7 +42,7 @@ CODE	= dataset_code_public.json
 DATA	= $(DOCS) # DOCS or CODE
 FILE	= elaborated.json
 FINAL	= final_elaborate.json
-K		= 4 # number of chunks, max 10
+K		= 9 # number of chunks, max 10
 OUTUN	= data/output/search_results/UnansweredQuestions
 
 index:
@@ -127,3 +127,9 @@ pipe:
 	--student_search_results_path $(OUTUN)/$(FILE) \
 	--save_directory data/output/search_results_and_answer/UnansweredQuestions \
 	--save_file $(FINAL)
+
+exam:
+	./exams/scripts/exam_retrieval.sh \
+	--student-path ./ \
+	--moulinette-path ./moulinette
+

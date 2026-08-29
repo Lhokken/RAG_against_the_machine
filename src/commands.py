@@ -9,7 +9,7 @@ import json
 class CLI():
 
     @staticmethod
-    def index(max_chunk_size: int, save_directory: str) -> None:
+    def index(max_chunk_size: int, save_directory: str = "data/processed") -> None:
         """Ingest data/raw/ and build the index under data/processed/.
         """
         try:

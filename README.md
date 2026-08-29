@@ -44,6 +44,11 @@ The system provides a Command Line Interface (CLI) built with `fire`, accessible
    ```bash
    make evaluate
    ```
+6. **Run full pipeline:**
+   ```bash
+   make pipe
+   ```
+
 
 ## System architecture
 The pipeline is structured around several core components:
@@ -56,7 +61,7 @@ The pipeline is structured around several core components:
 Document segmentation is handled by LangChain splitters tailored to the file format:
 * **Python Files:** Uses `PythonCodeTextSplitter` to respect classes and functions, preventing code blocks from being arbitrarily sliced.
 * **Markdown & Text Files:** Uses `RecursiveCharacterTextSplitter`.
-* **Sizing:** The maximum chunk size is dynamically adjustable (defaulting to 2000 characters) with a 15% overlap to ensure context continuity. 
+* **Sizing:** The maximum chunk size is dynamically adjustable (defaulting to 2000 characters) with a flexible overlap to ensure context continuity.
 * **Metadata Tracking:** Each chunk strictly tracks its `first_character_index` and `last_character_index` relative to the original source file. This is critical for precise downstream evaluation.
 
 ## Retrieval method
@@ -69,7 +74,7 @@ The retrieval mechanism relies on the **BM25 algorithm** (via the `bm25s` librar
 System retrieval accuracy is benchmarked using a custom **Recall@k** evaluation script.
 * **IoU (Intersection over Union) equivalent:** Instead of requiring exact index matches, the evaluation calculates the geometric overlap between the retrieved chunk's character range and the ground truth's character range.
 * **Match criteria:** A retrieval is counted as a success if the overlap exceeds a strict 5% threshold (IoU > 0.05).
-* The evaluation iterates up to $k$, providing a granular view of how recall improves as the number of retrieved documents increases.
+* The evaluation iterates up to (k), providing a granular view of how recall improves as the number of retrieved documents increases.
 
 ## Design decisions
 * **Dynamic Hardware Allocation:** To handle massive contexts without crashing, the system checks context length before LLM inference. If the context exceeds 9,000 characters, it automatically shifts from CUDA to CPU.
