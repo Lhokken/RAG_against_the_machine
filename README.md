@@ -48,6 +48,14 @@ The system provides a Command Line Interface (CLI) built with `fire`, accessible
    ```bash
    make pipe
    ```
+7. **Run full pipeline on code documents:**
+   ```bash
+   make code
+   ```
+8. **Run full pipeline on docs documents:**
+   ```bash
+   make docs
+   ```
 
 
 ## System architecture

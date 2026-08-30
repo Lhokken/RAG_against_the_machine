@@ -3,7 +3,6 @@
 from src.bm25_applier import Bm25sApplier
 from src.evaluate import evaluation_step
 from src.data_models import EvaluateRequest, MinimalSource
-import json
 
 
 class CLI():

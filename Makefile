@@ -42,7 +42,7 @@ CODE	= dataset_code_public.json
 DATA	= $(DOCS) # DOCS or CODE
 FILE	= $(DATA)
 FINAL	= final_elaborate.json
-K		= 9 # number of chunks, max 10
+K		= 6 # number of chunks, max 10
 OUTUN	= data/output/search_results/UnansweredQuestions
 
 index:
@@ -80,7 +80,6 @@ fastapi:
 fastapic:
 	$(UV) run fastapi dev --entrypoint src.commands:app
 
-
 clean:
 	rm -rf data/processed
 	rm -rf data/output
@@ -102,32 +101,23 @@ lint-strict:
 
 pipe:
 	@echo "\033[\n\n32mindex\033[0m"
-	$(UV) run python -m src index \
-	--max_chunk_size 2000 \
-	--save_directory data/processed
+	$(MAKE) index
 	@echo "\033[32msearch_dataset\033[0m"
-	$(UV) run python -m src search_dataset \
-	--dataset_path data/datasets/UnansweredQuestions/$(DATA) \
-	--k $(K) \
-	--save_directory $(OUTUN)
+	$(MAKE) search_dataset
 	@echo "\033[32mmoulinette\033[0m"
-	./moulinette evaluate_student_search_results \
-	$(OUTUN)/$(FILE) \
-	data/datasets/AnsweredQuestions/$(DATA) \
-	--k $(K) --max_context_length 2000
+	$(MAKE) moulinette
 	@echo "\033[32mevaluate\033[0m"
-	$(UV) run python -m src evaluate \
-	--student_search_results_path $(OUTUN)/$(FILE) \
-	--dataset_path data/datasets/AnsweredQuestions/$(DATA) \
-	--k $(K)
+	$(MAKE) evaluate
 	@echo "\033[32manswer_dataset\033[0m"
-	$(UV) run python -m src answer_dataset \
-	--student_search_results_path $(OUTUN)/$(FILE) \
-	--save_directory data/output/search_results_and_answer/UnansweredQuestions \
-	--save_file $(FINAL)
+	$(MAKE) answer_dataset
+
+code:
+	$(MAKE) pipe DATA=$(CODE)
+
+docs:
+	$(MAKE) pipe DATA=$(DOCS)
 
 exam:
 	./exams/scripts/exam_retrieval.sh \
 	--student-path ./ \
 	--moulinette-path ./moulinette
-

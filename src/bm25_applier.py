@@ -5,15 +5,15 @@ import bm25s
 import torch
 import transformers
 import json
-from pydantic import ValidationError, TypeAdapter
+from pydantic import ValidationError
 from typing import Any
 from tqdm import tqdm
 from langchain_core.documents import Document
 from transformers import pipeline, logging
 from src.explorer import Searcher
-from src.data_models import MinimalSource
-from src.data_models import MinimalSearchResults
-from src.data_models import StudentSearchResults
+from src.data_models import MinimalSource, MinimalSearchResults
+from src.data_models import StudentSearchResults, MinimalAnswer
+from src.data_models import RagDataGround, MinimalRagData
 from pathlib import Path
 
 
@@ -171,10 +171,10 @@ class Bm25sApplier():
         except IndexError as e:
             print(f"Parameter k must be >0: {e}")
             exit()
-        print("\n", cls.single_query(result))
+        print("\n", cls.single_query(result).answer)
 
     @classmethod
-    def single_query(cls, text: MinimalSearchResults) -> str:
+    def single_query(cls, text: MinimalSearchResults) -> MinimalAnswer:
         """This method use qwen to answer a single question
 
         After buildind the prompt with query and context, decide to use
@@ -234,7 +234,12 @@ Start your response immediately with the requested information.
                 exit()
             if len(result.strip()) > 50:
                 break
-        answer = result.rpartition('\n')[0].strip()
+        answer = MinimalAnswer.model_validate({
+            "question_id": text.question_id,
+            "question": text.question,
+            "retrieved_sources": text.retrieved_sources,
+            "answer": result.rpartition('\n')[0].strip()
+        })
         return answer
 
     @classmethod
@@ -257,18 +262,16 @@ Start your response immediately with the requested information.
         except (ValidationError, FileNotFoundError) as e:
             print(e)
             exit()
-        answer_list = []
-        n_result: dict[str, str] = {}
+        answer_list = RagDataGround(rag_questions=[])
+
         cls.bm25_index_inizialize()
         counter: int = 0
         for elem in tqdm(question_list):
             counter += 1
             sources = (elem)["retrieved_sources"]
-            question = (elem)["question"]
-            question_id = (elem)["question_id"]
-            context: list = []
-            for source in tqdm(sources):
-                context.append(Searcher.extractor(MinimalSource.model_validate(source)))
+            question: str = (elem)["question"]
+            question_id: str = (elem)["question_id"]
+
             print(f"----------\nElaborating query number: {counter}")
 
             result = (MinimalSearchResults.model_validate({
@@ -277,33 +280,28 @@ Start your response immediately with the requested information.
                 "retrieved_sources": sources
             }))
 
-
-            answer = cls.single_query(result)
+            answer = cls.single_query(result).answer
             print(
-                "\n=== Answer: ===\n"
+                "\n\n=== Answer: ===\n"
                 f"{answer}\n"
                 "======\n"
                 )
-            n_result = {
+
+            n_result = (MinimalRagData.model_validate({
                 "question_id": question_id,
                 "question": question,
-                "retrieved_sources": sources,
-                "answer": answer
-            }
-            answer_list.append(n_result)
+                "answer": answer,
+                "sources": sources,
+                "difficulty": "easy",
+                "is_valid": True
+            }))
+            answer_list.rag_questions.append(n_result)
 
-        final_list = {"search_results": answer_list,
-                      "k": len(question_list[0]["retrieved_sources"])}
         os.makedirs(save_directory, exist_ok=True)
-        try:
-            with open(
-                    f"{save_directory}/{save_file}", "w"
-                    ) as file_output:
-                json.dump(final_list, file_output, indent=2)
-        except FileNotFoundError as e:
-            print(e)
-            exit()
 
+        Path(f"{save_directory}/{save_file}").write_text(
+                    answer_list.model_dump_json(indent=2)
+                    )
         print(
             f"\nLoaded 100 questions ... Processed {counter} "
             F"of {len(question_list)} questions\n"

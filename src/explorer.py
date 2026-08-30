@@ -65,27 +65,13 @@ class Searcher():
         text, html, and .py.
         Then create file chunks.
         """
-        # html_pattern = r'</?(h[1-6]|p|div|span|br|table)[^>]*>'
         txt_chunker = RecursiveCharacterTextSplitter(
             chunk_size=cls.max_chunk_size,
             chunk_overlap=cls.overlap,
             add_start_index=True,
             length_function=len
             )
-        # md_chunker = MarkdownHeaderTextSplitter(
-        #     headers_to_split_on=[
-        #         ("#", "Title_1_H1"),
-        #         ("##", "Title_2_H2"),
-        #         ("###", "Title_3_H3")
-        #     ]
-        # )
-        # html_chunker = HTMLHeaderTextSplitter(
-        #     headers_to_split_on=[
-        #         ("h1", "Title_1_H1"),
-        #         ("h2", "Title_2_H2"),
-        #         ("h3", "Title_3_H3")
-        #     ]
-        # )
+
         py_chunker = PythonCodeTextSplitter(
             chunk_size=cls.max_chunk_size,
             chunk_overlap=cls.overlap
@@ -104,17 +90,6 @@ class Searcher():
                             metadata={"source": file}
                             )
                         temp = txt_chunker.split_documents([text])
-
-                    # elif file.lower().endswith(".md"):
-                        # if re.search(
-                        #         html_pattern, text_content, re.IGNORECASE
-                        #         ):
-                        #     temp = html_chunker.split_text(text_content)
-                        # else:
-                        # temp = md_chunker.split_text(text_content)
-                        # for doc in temp:
-                        #     doc.metadata["source"] = file
-                        # temp = txt_chunker.split_documents(temp)
 
                     elif file.lower().endswith(".py"):
                         temp = py_chunker.create_documents(

@@ -1,8 +1,11 @@
 __pycache__/
 datasets_public/
+data/datasets/private/
+data/processed/
+evaluations/
 llm_sdk/
 vllm-0.10.1/
-data/
+data/raw/vllm-0.10.1
 
 uv.lock
 moulinette.zip
