@@ -9,7 +9,10 @@ import json
 class CLI():
 
     @staticmethod
-    def index(max_chunk_size: int, save_directory: str = "data/processed") -> None:
+    def index(
+            max_chunk_size: int,
+            save_directory: str = "data/processed"
+            ) -> None:
         """Ingest data/raw/ and build the index under data/processed/.
         """
         try:
@@ -43,8 +46,7 @@ class CLI():
     def search_dataset(
             dataset_path: str,
             k: int,
-            save_directory: str,
-            save_file: str = "prova.json"
+            save_directory: str
             ) -> None:
         """Run search over a whole dataset and write a
         StudentSearchResults JSON file.
@@ -57,8 +59,7 @@ class CLI():
         Bm25sApplier.search_dataset_query(
             dataset_path,
             k,
-            save_directory,
-            save_file
+            save_directory
             )
 
     @staticmethod

@@ -11,6 +11,7 @@ from tqdm import tqdm
 from langchain_core.documents import Document
 from transformers import pipeline, logging
 from src.explorer import Searcher
+from pathlib import Path
 
 
 class Bm25sApplier():
@@ -106,8 +107,7 @@ class Bm25sApplier():
             cls,
             dataset_path: str,
             k: int,
-            save_directory: str,
-            save_file: str
+            save_directory: str
             ) -> None:
         """This method search corpus about a list of question
 
@@ -130,9 +130,11 @@ class Bm25sApplier():
                     })
                     result.append((text_1))
                 os.makedirs(save_directory, exist_ok=True)
+                file_path = Path(dataset_path)
+                file_path.name
                 dict_result = {"search_results": result, "k": k}
                 with open(
-                        f"{save_directory}/{save_file}", "w"
+                        f"{save_directory}/{file_path.name}", "w"
                         ) as file_output:
                     json.dump(dict_result, file_output, indent=2)
                 print(

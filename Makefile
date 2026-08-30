@@ -39,8 +39,8 @@ debug:
 
 DOCS	= dataset_docs_public.json
 CODE	= dataset_code_public.json
-DATA	= $(DOCS) # DOCS or CODE
-FILE	= elaborated.json
+DATA	= $(CODE) # DOCS or CODE
+FILE	= $(DATA)
 FINAL	= final_elaborate.json
 K		= 9 # number of chunks, max 10
 OUTUN	= data/output/search_results/UnansweredQuestions
@@ -54,8 +54,7 @@ search_dataset:
 	$(UV) run python -m src search_dataset \
 	--dataset_path data/datasets/UnansweredQuestions/$(DATA) \
 	--k $(K) \
-	--save_directory $(OUTUN) \
-	--save_file $(FILE)
+	--save_directory $(OUTUN)
 
 moulinette:
 	./moulinette evaluate_student_search_results \
@@ -110,8 +109,7 @@ pipe:
 	$(UV) run python -m src search_dataset \
 	--dataset_path data/datasets/UnansweredQuestions/$(DATA) \
 	--k $(K) \
-	--save_directory $(OUTUN) \
-	--save_file $(FILE)
+	--save_directory $(OUTUN)
 	@echo "\033[32mmoulinette\033[0m"
 	./moulinette evaluate_student_search_results \
 	$(OUTUN)/$(FILE) \
