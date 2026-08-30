@@ -2,7 +2,7 @@
 
 from src.bm25_applier import Bm25sApplier
 from src.evaluate import evaluation_step
-from src.data_models import EvaluateRequest
+from src.data_models import EvaluateRequest, MinimalSource
 import json
 
 
@@ -23,7 +23,7 @@ class CLI():
         Bm25sApplier.bm25_index_inizialize(max_chunk_size, save_directory)
 
     @staticmethod
-    def search(query: str, k: int) -> str:
+    def search(query: str, k: int) -> list[MinimalSource]:
         """Return the top-k sources for a single query.
         """
         try:
@@ -31,15 +31,12 @@ class CLI():
         except ValueError as e:
             print(e)
             exit("Insert valid data !!!\n")
+        Bm25sApplier.bm25_index_inizialize()
         print(
             "Elaborating query ...\n"
             f"{query}"
         )
-        result = json.dumps(
-            (Bm25sApplier.search_single_query(query, k)),
-            indent=4
-            )
-        # print(result)
+        result = Bm25sApplier.search_single_query(query, k)
         return result
 
     @staticmethod

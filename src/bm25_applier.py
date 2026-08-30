@@ -5,12 +5,15 @@ import bm25s
 import torch
 import transformers
 import json
-from pydantic import ValidationError
+from pydantic import ValidationError, TypeAdapter
 from typing import Any
 from tqdm import tqdm
 from langchain_core.documents import Document
 from transformers import pipeline, logging
 from src.explorer import Searcher
+from src.data_models import MinimalSource
+from src.data_models import MinimalSearchResults
+from src.data_models import StudentSearchResults
 from pathlib import Path
 
 
@@ -73,11 +76,11 @@ class Bm25sApplier():
             exit()
 
     @classmethod
-    def search_single_query(cls, query: str, n: int) -> list[dict[str, str]]:
+    def search_single_query(cls, query: str, n: int) -> list[MinimalSource]:
         """This method return the top k number resources
 
         Based on a single query this method uses bm25s criteria to return
-        a list of dictionaries with the most significant data based on the
+        a list of MinimalSource with the most significant data based on the
         given query.
         """
         query_tokens = bm25s.tokenize([query])
@@ -88,19 +91,19 @@ class Bm25sApplier():
             )
         docs_found = result[0]
         scores_found = scores[0]
-        text_list: list[dict[str, str]] = []
+        min_res: list[MinimalSource] = []
         for position, (doc, score) in enumerate(
                 zip(docs_found, scores_found), 1
                 ):
             metadata = doc["metadati"]["source"]
             first = doc["metadati"]["first_char_index"]
             last = doc["metadati"]["last_char_index"]
-            text_list.append({
+            min_res.append(MinimalSource.model_validate({
                 "file_path": metadata[2:],
                 "first_character_index": first,
-                "last_character_index": last
-                })
-        return ((text_list))
+                "last_character_index": last,
+                }))
+        return min_res
 
     @classmethod
     def search_dataset_query(
@@ -115,28 +118,27 @@ class Bm25sApplier():
         Then save result in a file in the given directory.
         """
         print("Elaborating query ...\n")
-        result = []
+        result: list[MinimalSearchResults] = []
         cls.bm25_index_inizialize()
         try:
             with open(dataset_path, encoding="utf-8") as source:
                 text_content = json.load(source)
                 for elem in tqdm(text_content["rag_questions"]):
-                    text_1 = {}
-                    text_2 = cls.search_single_query(elem["question"], k)
-                    text_1.update({
+                    text = cls.search_single_query(elem["question"], k)
+                    result.append(MinimalSearchResults.model_validate({
                         "question_id": f"{elem['question_id']}",
                         "question": f"{elem['question']}",
-                        "retrieved_sources": text_2
-                    })
-                    result.append((text_1))
+                        "retrieved_sources": text
+                    }))
                 os.makedirs(save_directory, exist_ok=True)
                 file_path = Path(dataset_path)
                 file_path.name
-                dict_result = {"search_results": result, "k": k}
-                with open(
-                        f"{save_directory}/{file_path.name}", "w"
-                        ) as file_output:
-                    json.dump(dict_result, file_output, indent=2)
+                dict_result = StudentSearchResults.model_validate({
+                    "search_results": result,
+                    "k": k})
+                Path(f"{save_directory}/{file_path.name}").write_text(
+                    dict_result.model_dump_json(indent=2)
+                    )
                 print(
                     "---\nStudentSearchResults JSON file saved in:\n"
                     f"{save_directory}\n---\n"
@@ -153,25 +155,38 @@ class Bm25sApplier():
         then call single_query with question and data.
         """
         cls.bm25_index_inizialize()
-        context: str = ""
+        # context: str = ""
+        # result: MinimalSearchResults
         try:
             if k <= 0:
                 raise IndexError
             else:
                 data_list = cls.search_single_query(query, k)
-                context = json.dumps(data_list, indent=2)
+                # context = data_list.model
+                result = (MinimalSearchResults.model_validate({
+                    "question_id": "",
+                    "question": query,
+                    "retrieved_sources": data_list
+                }))
         except IndexError as e:
             print(f"Parameter k must be >0: {e}")
             exit()
-        print("\n", cls.single_query(query, context))
+        print("\n", cls.single_query(result))
 
     @classmethod
-    def single_query(cls, query: str, context: str) -> str:
+    def single_query(cls, text: MinimalSearchResults) -> str:
         """This method use qwen to answer a single question
 
         After buildind the prompt with query and context, decide to use
         cuda or cpu, activate the llm model qwen and finally return the result.
         """
+        context: str = ""
+        for source in tqdm(text.retrieved_sources):
+            context += (
+                Searcher.extractor(MinimalSource.model_validate(source))
+                + "\n"
+                )
+        query = text.question
         chat = f"""<|im_start|>system
 Output ONLY the factual answer.
 Start your response immediately with the requested information.
@@ -251,11 +266,19 @@ Start your response immediately with the requested information.
             sources = (elem)["retrieved_sources"]
             question = (elem)["question"]
             question_id = (elem)["question_id"]
-            context: str = ""
+            context: list = []
             for source in tqdm(sources):
-                context += Searcher.extractor(source)
+                context.append(Searcher.extractor(MinimalSource.model_validate(source)))
             print(f"----------\nElaborating query number: {counter}")
-            answer = cls.single_query(question, context)
+
+            result = (MinimalSearchResults.model_validate({
+                "question_id": question_id,
+                "question": question,
+                "retrieved_sources": sources
+            }))
+
+
+            answer = cls.single_query(result)
             print(
                 "\n=== Answer: ===\n"
                 f"{answer}\n"

@@ -5,6 +5,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_text_splitters import PythonCodeTextSplitter
 from langchain_core.documents import Document
 from pydantic import ValidationError
+from src.data_models import MinimalSource
 from pprint import pprint
 
 
@@ -164,15 +165,15 @@ class Searcher():
             print("-" * 50)
 
     @classmethod
-    def extractor(cls, data_file: dict[str, str]) -> str:
+    def extractor(cls, data_file: MinimalSource) -> str:
         """This method is used to extract chunk from the corpus
         """
         try:
-            with open(data_file["file_path"],  encoding="utf-8") as source:
+            with open(data_file.file_path,  encoding="utf-8") as source:
                 text_content = source.read()
         except FileNotFoundError as e:
             print(e)
             exit()
-        start = int(data_file["first_character_index"])
-        end = int(data_file["last_character_index"])
+        start = int(data_file.first_character_index)
+        end = int(data_file.last_character_index)
         return text_content[start:end]

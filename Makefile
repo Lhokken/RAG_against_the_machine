@@ -39,7 +39,7 @@ debug:
 
 DOCS	= dataset_docs_public.json
 CODE	= dataset_code_public.json
-DATA	= $(CODE) # DOCS or CODE
+DATA	= $(DOCS) # DOCS or CODE
 FILE	= $(DATA)
 FINAL	= final_elaborate.json
 K		= 9 # number of chunks, max 10
