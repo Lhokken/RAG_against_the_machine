@@ -21,7 +21,7 @@ search:
 	$(UV) run python -m src search "database search" 3
 
 answer:
-	$(UV) run python -m src answer "What activation formats does the fused batched MoE layer return in vLLM?" 1
+	$(UV) run python -m src answer "What activation formats does the fused batched MoE layer return in vLLM?" 6
 
 debug:
 	$(UV) run python -m pdb src
@@ -42,7 +42,7 @@ CODE	= dataset_code_public.json
 DATA	= $(DOCS) # DOCS or CODE
 FILE	= $(DATA)
 FINAL	= final_elaborate.json
-K		= 6 # number of chunks, max 10
+K		= 4 # number of chunks, max 10
 OUTUN	= data/output/search_results/UnansweredQuestions
 
 index:
@@ -65,8 +65,7 @@ moulinette:
 answer_dataset:
 	$(UV) run python -m src answer_dataset \
 	--student_search_results_path $(OUTUN)/$(FILE) \
-	--save_directory data/output/search_results_and_answer/UnansweredQuestions \
-	--save_file $(FINAL)
+	--save_directory data/output/search_results_and_answer/UnansweredQuestions
 
 evaluate:
 	$(UV) run python -m src evaluate \
@@ -116,8 +115,3 @@ code:
 
 docs:
 	$(MAKE) pipe DATA=$(DOCS)
-
-exam:
-	./exams/scripts/exam_retrieval.sh \
-	--student-path ./ \
-	--moulinette-path ./moulinette

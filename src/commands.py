@@ -80,8 +80,7 @@ class CLI():
         """
         Bm25sApplier.answer_dataset_query(
             student_search_results_path,
-            save_directory,
-            save_file
+            save_directory
             )
 
     @staticmethod

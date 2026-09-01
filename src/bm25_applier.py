@@ -155,14 +155,11 @@ class Bm25sApplier():
         then call single_query with question and data.
         """
         cls.bm25_index_inizialize()
-        # context: str = ""
-        # result: MinimalSearchResults
         try:
             if k <= 0:
                 raise IndexError
             else:
                 data_list = cls.search_single_query(query, k)
-                # context = data_list.model
                 result = (MinimalSearchResults.model_validate({
                     "question_id": "",
                     "question": query,
@@ -246,8 +243,7 @@ Start your response immediately with the requested information.
     def answer_dataset_query(
             cls,
             student_search_results_path: str,
-            save_directory: str,
-            save_file: str
+            save_directory: str
             ) -> None:
         """This method apply single_query to each question.
 
@@ -296,10 +292,9 @@ Start your response immediately with the requested information.
                 "is_valid": True
             }))
             answer_list.rag_questions.append(n_result)
-
+        file_path = Path(student_search_results_path)
         os.makedirs(save_directory, exist_ok=True)
-
-        Path(f"{save_directory}/{save_file}").write_text(
+        Path(f"{save_directory}/{file_path.name}").write_text(
                     answer_list.model_dump_json(indent=2)
                     )
         print(
